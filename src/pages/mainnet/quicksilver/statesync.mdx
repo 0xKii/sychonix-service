@@ -20,7 +20,7 @@ cp $HOME/.quicksilverd/data/priv_validator_state.json $HOME/.quicksilverd/priv_v
 quicksilverd tendermint unsafe-reset-all --home $HOME/.quicksilverd
 
 STATE_SYNC_RPC=https://rpc.quicksilver.indonode.net:443
-STATE_SYNC_PEER=3461638afd470034067392e5dba8dcf6de49f81f@rpc.quicksilver.indonode.net:28656
+STATE_SYNC_PEER=6869039189552e03ba3593a0f757aaf75e0a31d7@rpc.quicksilver.indonode.net:28656
 LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
 SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 2000))
 SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
