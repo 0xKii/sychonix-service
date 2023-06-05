@@ -24,7 +24,7 @@ LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.heigh
 SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
 SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
 
-PEERS=9fe6d3bd18bb5367396b6602a65e20b302d36b33@rpc.realio.indonode.net:18656
+PEERS=ade60d73a51f9731e1559c6f70a13c5fe0157aa2@rpc.realio.indonode.net:18656
 sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.realio-network/config/config.toml
 
 sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.realio-network/config/config.toml
