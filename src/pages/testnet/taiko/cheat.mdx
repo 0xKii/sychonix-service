@@ -1,0 +1,56 @@
+Commands for Taiko Docker node.
+Execute this inside folder simple-taiko-node
+
+```
+cd simple-taiko-node
+```
+
+### Useful Commands
+
+- Start Node
+```
+docker compose up
+```
+Start in the background (Recommended)
+```
+docker compose up -d
+```
+
+- Stop Node
+```
+docker compose down
+```
+
+- Remove Node 
+```
+docker compose down -v
+rm -f .env
+```
+
+- Update Node (if any)
+```
+docker compose pull
+```
+
+### Logging
+
+- Node Logs
+```
+docker compose logs -f
+```
+
+- Proposer Logs
+```
+docker compose logs -f taiko_client_proposer
+```
+
+- Prover Logs
+```
+docker compose logs -f taiko_client_prover_relayer
+```
+
+- Taiko Node stats
+```
+docker stats
+```
+
