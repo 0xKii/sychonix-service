@@ -35,7 +35,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install curl build-essential git wget npm jq make gcc tmux -y
 ```
 
-### Clean Docker (OPTIONAK)
+### Clean Docker (OPTIONAL)
 DO NOT DO THIS IF YOU ALREADY HAVE RUNNING DOCKER!!! IT WILL REMOVE DOCKER COMPLETELY AND CAUSE ERROR!
 ```
 apt purge docker docker-engine docker.io containerd docker-compose -y
@@ -98,11 +98,12 @@ PORT_GRAFANA=3000
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">Prover</button>
 </a>
 
-### Start a Proposer
+### Start a Proposer if you have TTKO if not , just skip
 <a href="https://indonode.net/testnet/taiko/proposer/" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">Proposer</button>
 </a>
 
+- After finished setting up for Prover or Proposer, Start your node
 ### Start Node
 - Start Node
 ```
@@ -139,11 +140,13 @@ docker compose pull
 ### Monitoring
 To Monitor your hardware usage and node go to :
 
+```
 http://localhost:3000/d/L2ExecutionEngine/l2-execution-engine-overview
+```
 
 Change `localhost` to your node ip if you are using VPS
 
-When you see login form set username and password as : admin
+When you see login form set username and password as : `admin`
 
 Then change your password to your liking
 
