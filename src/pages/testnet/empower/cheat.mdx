@@ -167,9 +167,9 @@ Backup your key first it will remove Defund from your system
 ```
 sudo systemctl stop empowerd && \
 sudo systemctl disable empowerd && \
-rm /etc/systemd/system/noriad.service && \
+rm /etc/systemd/system/empowerd.service && \
 sudo systemctl daemon-reload && \
 cd $HOME && \
 rm -rf .empowerchain && \
-rm -rf $(which noriad)
+rm -rf $(which empowerd)
 ```
