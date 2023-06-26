@@ -3,7 +3,7 @@ layout: '~/layouts/MarkdownLayout.astro'
 title: Node CLI Cheatsheet
 network: Testnet
 icon: timpi
-chain: TimpiChainTN
+chain: TimpiChainTN2
 version: 
 ---
 
@@ -54,7 +54,7 @@ TimpiChain tx staking create-validator \
 --identity="YOUR_KEYBASE_ID" \
 --details="YOUR_DETAILS" \
 --website="YOUR_WEBSITE_URL" \
---chain-id=TimpiChainTN \
+--chain-id=TimpiChainTN2 \
 --commission-rate=0.05 \
 --commission-max-rate=0.20 \
 --commission-max-change-rate=0.01 \
@@ -73,7 +73,7 @@ TimpiChain tx staking edit-validator \
 --identity="YOUR_KEYBASE_ID" \
 --details="YOUR_DETAILS" \
 --website="YOUR_WEBSITE_URL"
---chain-id TimpiChainTN \
+--chain-id TimpiChainTN2 \
 --commission-rate=0.05 \
 --from=<wallet> \
 --gas-adjustment 1.4 \
@@ -85,7 +85,7 @@ TimpiChain tx staking edit-validator \
 
 Unjail Validator
 ```
-TimpiChain tx slashing unjail --from <wallet> --chain-id --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx slashing unjail --from <wallet> --chain-id --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 Check Jailed Reason
@@ -97,32 +97,32 @@ TimpiChain query slashing signing-info $(TimpiChain tendermint show-validator)
 
 Withdraw Rewards
 ```
-TimpiChain tx distribution withdraw-all-rewards --from wallet --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx distribution withdraw-all-rewards --from wallet --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 Withdraw Rewards with Comission
 ```
-TimpiChain tx distribution withdraw-rewards $(TimpiChain keys show wallet --bech val -a) --commission --from wallet --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx distribution withdraw-rewards $(TimpiChain keys show wallet --bech val -a) --commission --from wallet --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 Delegate Token to your own validator
 ```
-TimpiChain tx staking delegate $(TimpiChain keys show wallet --bech val -a) 1000000utimpiTN --from wallet --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx staking delegate $(TimpiChain keys show wallet --bech val -a) 1000000utimpiTN --from wallet --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 Delegate Token to other validator
 ```
-TimpiChain tx staking redelegate $(TimpiChain keys show wallet --bech val -a) <TO_VALOPER_ADDRESS> 1000000utimpiTN --from wallet --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx staking redelegate $(TimpiChain keys show wallet --bech val -a) <TO_VALOPER_ADDRESS> 1000000utimpiTN --from wallet --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 Unbond Token from your validator
 ```
-TimpiChain tx staking unbond $(TimpiChain keys show wallet --bech val -a) 1000000utimpiTN --from wallet --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx staking unbond $(TimpiChain keys show wallet --bech val -a) 1000000utimpiTN --from wallet --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 Send Token to another wallet
 ```
-TimpiChain tx bank send wallet <TO_WALLET_ADDRESS> 1000000utimpiTN --from wallet --chain-id TimpiChainTN
+TimpiChain tx bank send wallet <TO_WALLET_ADDRESS> 1000000utimpiTN --from wallet --chain-id TimpiChainTN2
 ```
 
 ### Governance 
@@ -131,7 +131,7 @@ Vote
 You can change the value of `yes` to `no`,`abstain`,`nowithveto`
 
 ```
-TimpiChain tx gov vote 1 yes --from wallet --chain-id TimpiChainTN --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
+TimpiChain tx gov vote 1 yes --from wallet --chain-id TimpiChainTN2 --gas-adjustment 1.4 --gas="auto" --gas-prices=0utimpiTN -y
 ```
 
 ### Other
