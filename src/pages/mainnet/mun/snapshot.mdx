@@ -1,0 +1,33 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Snapshot
+network: Mainnet
+icon: mun
+chain: mun-1
+version: 1.0.0
+---
+## Intruction
+
+### Install lz4
+```
+sudo apt install lz4 -y
+```
+
+### Stop empower and Backup priv_validator_state.json
+```
+sudo systemctl stop mund
+cp $HOME/.mun/data/priv_validator_state.json $HOME/.mun/priv_validator_state.json.backup
+rm -rf $HOME/.mun/data
+```
+
+### Download Snapshot
+```
+curl -L https://snapshots.indonode.net/mun/mun-snapshot.tar.lz4 | tar -Ilz4 -xf - -C $HOME/.mun
+mv $HOME/.mun/priv_validator_state.json.backup $HOME/.mun/data/priv_validator_state.json
+```
+
+### Restart Node and Check the logs
+
+```
+sudo systemctl start mund && sudo journalctl -u mund -f --no-hostname -o cat
+```

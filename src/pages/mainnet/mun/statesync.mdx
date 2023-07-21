@@ -1,0 +1,48 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Mainnet
+icon: mun
+chain: mun-1
+version: 1.0.0
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 2000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+sudo systemctl stop mund
+cp $HOME/.mun/data/priv_validator_state.json $HOME/.mun/priv_validator_state.json.backup
+mund tendermint unsafe-reset-all --home $HOME/.mun
+
+STATE_SYNC_RPC=https://rpc.mun.indonode.net:443
+STATE_SYNC_PEER=d28d8c1d31fa97fe668c90700797709f3a0f1b6c@rpc.mun.indonode.net:55656
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 2000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+sed -i \
+  -e "s|^enable *=.*|enable = true|" \
+  -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  -e "s|^persistent_peers *=.*|persistent_peers = \"$STATE_SYNC_PEER\"|" \
+  $HOME/.mun/config/config.toml
+
+mv $HOME/.mun/priv_validator_state.json.backup $HOME/.mun/data/priv_validator_state.json
+```
+
+### Restart Service
+```
+sudo systemctl start mund && sudo journalctl -u mund -f --no-hostname -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.mun/config/config.toml
+systemctl restart mund && journalctl -fu mund -o cat
+```
