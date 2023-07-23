@@ -36,6 +36,11 @@ sed -i \
 mv $HOME/.mun/priv_validator_state.json.backup $HOME/.mun/data/priv_validator_state.json
 ```
 
+### Download Latest Wasm
+```
+curl -L https://snapshots.indonode.net/mun/wasm.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.mun
+```
+
 ### Restart Service
 ```
 sudo systemctl start mund && sudo journalctl -u mund -f --no-hostname -o cat
