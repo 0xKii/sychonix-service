@@ -3,8 +3,8 @@ layout: '~/layouts/MarkdownLayout.astro'
 title: Node CLI Cheatsheet
 network: Testnet
 icon: blockx
-chain: blockx_12345-2
-version: 0.1.1-test
+chain: blockx_50-1
+version: v10.0.0
 ---
 
 ### CLI Cheatsheet
@@ -54,7 +54,7 @@ blockxd tx staking create-validator \
 --identity="YOUR_KEYBASE_ID" \
 --details="YOUR_DETAILS" \
 --website="YOUR_WEBSITE_URL" \
---chain-id=blockx_12345-2 \
+--chain-id=blockx_50-1 \
 --commission-rate=0.05 \
 --commission-max-rate=0.20 \
 --commission-max-change-rate=0.01 \
@@ -73,7 +73,7 @@ blockxd tx staking edit-validator \
 --identity="YOUR_KEYBASE_ID" \
 --details="YOUR_DETAILS" \
 --website="YOUR_WEBSITE_URL"
---chain-id blockx_12345-2 \
+--chain-id blockx_50-1 \
 --commission-rate=0.05 \
 --from=<wallet> \
 --gas-adjustment="1.15" \
@@ -85,7 +85,7 @@ blockxd tx staking edit-validator \
 
 Unjail Validator
 ```
-blockxd tx slashing unjail --from <wallet> --chain-id --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx slashing unjail --from <wallet> --chain-id --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 Check Jailed Reason
@@ -97,32 +97,32 @@ blockxd query slashing signing-info $(blockxd tendermint show-validator)
 
 Withdraw Rewards
 ```
-blockxd tx distribution withdraw-all-rewards --from wallet --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx distribution withdraw-all-rewards --from wallet --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 Withdraw Rewards with Comission
 ```
-blockxd tx distribution withdraw-rewards $(blockxd keys show wallet --bech val -a) --commission --from wallet --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx distribution withdraw-rewards $(blockxd keys show wallet --bech val -a) --commission --from wallet --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 Delegate Token to your own validator
 ```
-blockxd tx staking delegate $(blockxd keys show wallet --bech val -a) 1000000abcx --from wallet --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx staking delegate $(blockxd keys show wallet --bech val -a) 1000000abcx --from wallet --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 Delegate Token to other validator
 ```
-blockxd tx staking redelegate $(blockxd keys show wallet --bech val -a) <TO_VALOPER_ADDRESS> 1000000abcx --from wallet --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx staking redelegate $(blockxd keys show wallet --bech val -a) <TO_VALOPER_ADDRESS> 1000000abcx --from wallet --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 Unbond Token from your validator
 ```
-blockxd tx staking unbond $(blockxd keys show wallet --bech val -a) 1000000abcx --from wallet --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx staking unbond $(blockxd keys show wallet --bech val -a) 1000000abcx --from wallet --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 Send Token to another wallet
 ```
-blockxd tx bank send wallet <TO_WALLET_ADDRESS> 1000000abcx --from wallet --chain-id blockx_12345-2
+blockxd tx bank send wallet <TO_WALLET_ADDRESS> 1000000abcx --from wallet --chain-id blockx_50-1
 ```
 
 ### Governance 
@@ -131,7 +131,7 @@ Vote
 You can change the value of `yes` to `no`,`abstain`,`nowithveto`
 
 ```
-blockxd tx gov vote 1 yes --from wallet --chain-id blockx_12345-2 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
+blockxd tx gov vote 1 yes --from wallet --chain-id blockx_50-1 --gas-adjustment 1.15 --gas="300000" --gas-prices="1000000000abcx" -y
 ```
 
 ### Other
