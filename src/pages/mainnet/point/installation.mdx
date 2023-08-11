@@ -4,7 +4,7 @@ title: Installation Node
 icon: point
 network: Mainnet
 chain: point_10687-1
-version: v0.0.4
+version: v0.0.5
 ---
 
 ### Hardware requirements
@@ -44,18 +44,15 @@ go version
 
 ```
 cd $HOME
-rm -rf point-chain
-git clone https://github.com/pointnetwork/point-chain && cd point-chain
-git fetch --all
-git checkout tags/v0.0.4
-make install
+wget https://github.com/pointnetwork/point-chain/releases/download/v0.0.5/point-chain_0.0.5_Linux_x86_64.tar.gz
+tar -xzvf point-chain_0.0.5_Linux_x86_64.tar.gz
 ```
 
 ### Prepare Cosmovisor
 ```
 mkdir -p $HOME/.pointd/cosmovisor/genesis/bin
-mv build/pointd $HOME/.pointd/cosmovisor/genesis/bin/
-rm -rf build
+mv bin/pointd $HOME/.pointd/cosmovisor/genesis/bin/
+rm -rf bin
 ```
 ```
 sudo ln -s $HOME/.pointd/cosmovisor/genesis $HOME/.pointd/cosmovisor/current
@@ -106,8 +103,8 @@ curl -Ls https://snapshots.indonode.net/point/addrbook.json > $HOME/.pointd/conf
 ### Configure Seeds and Peers
 
 ```
-PEERS=`curl -s https://raw.githubusercontent.com/pointnetwork/point-chain-config/main/mainnet-1/peers.txt`
-sed -i.bak -e "s/^persistent_peers *=.*/persistent	_peers = \"$PEERS\"/" $HOME/.pointd/config/config.toml
+PEERS="$(curl -sS https://rpc.point.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
+sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.pointd/config/config.toml
 ```
 
 ### Config pruning
@@ -152,15 +149,11 @@ WantedBy=multi-user.target
 EOF
 sudo systemctl daemon-reload
 sudo systemctl enable pointd
-<<<<<<< HEAD
-```
 
 ### Download Latest Snapshot
 ```
 curl -L https://snapshots.indonode.net/point/point-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.pointd
 [[ -f $HOME/.pointd/data/upgrade-info.json ]] && cp $HOME/.pointd/data/upgrade-info.json $HOME/.pointd/cosmovisor/genesis/upgrade-info.json
-=======
->>>>>>> 28a2f0c34e5316eabaadf3e003cbbe2cbdcb7643
 ```
 
 - Enable Service and Start Node
