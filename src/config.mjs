@@ -1,13 +1,13 @@
-import defaultImage from './assets/images/indonode.png';
+import defaultImage from './assets/images/vinjan.png';
 
 const CONFIG = {
-  name: 'indonode',
+  name: 'vinjan',
 
-  origin: 'https://indonode.net/',
+  origin: 'https://service.vinjan.xyz/',
   basePathname: '/',
   trailingSlash: false,
 
-  title: 'Indonode - Highly Secured Staking Provider',
+  title: 'Vinjan - Trusted Staking Provider',
   description:
     'Validator & Node Operator Cosmos Networks',
   defaultImage: defaultImage,
