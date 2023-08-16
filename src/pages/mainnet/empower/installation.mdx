@@ -44,11 +44,11 @@ go version
 
 ```
 cd $HOME
-rm -rf empowerchain/
-git clone https://github.com/EmpowerPlastic/empowerchain
-cd empowerchain/chain
+git clone https://github.com/EmpowerPlastic/empowerchain.git
+cd empowerchain
 git checkout v1.0.0
-make build
+cd chain
+make install
 ```
 
 Verify that you've installed empowerd successfully
@@ -57,36 +57,15 @@ Verify that you've installed empowerd successfully
 empowerd version
 ```
 
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.empowerchain/cosmovisor/genesis/bin
-mv build/empowerd $HOME/.empowerchain/cosmovisor/genesis/bin/
-rm -rf build
-
-
-sudo ln -s $HOME/.empowerchain/cosmovisor/genesis $HOME/.empowerchain/cosmovisor/current
-sudo ln -s $HOME/.empowerchain/cosmovisor/current/bin/empowerd /usr/local/bin/empowerd
-```
-
-### Install Cosmovisor
-```
-
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
-
-```
-empowerd config chain-id empowerchain-1
-empowerd config keyring-backend file
-```
 
 ### Initialize Node
 
-Please change `<YOUR_MONIKER>` To your own Moniker.
+Please change `<MONIKER>` To your own Moniker.
 
 ```
-empowerd init <YOUR_MONIKER> --chain-id empowerchain-1
+empowerd init $MONIKER --chain-id empowerchain-1
+empowerd config chain-id empowerchain-1
+empowerd config keyring-backend file
 ```
 
 ### Download Genesis file and addrbook
@@ -94,41 +73,37 @@ empowerd init <YOUR_MONIKER> --chain-id empowerchain-1
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/empower/genesis.json > $HOME/.empowerchain/config/genesis.json
+URL=https://github.com/EmpowerPlastic/empowerchain/raw/main/mainnet/empowerchain-1/genesis.tar.gz
+curl -L $URL | tar -xz -C $HOME/.empowerchain/config/
 ```
 
 - Addrbook
 
 ```
-curl -Ls https://snapshots.indonode.net/empower/addrbook.json > $HOME/.empowerchain/config/addrbook.json
+wget -O $HOME/.empowerchain/config/addrbook.json "https://services.empowerchain-1.empower.aviaone.com/addrbook.json"
 ```
 
-### Configure Seeds and Peers
+### Configure Seeds and Peers and Gas
 
 ```
-SEEDS="d2362ebcdd562500ac8c4cfa2214a89ad811033c@seeds.whispernode.com:17456"
-PEERS=""
-sed -i 's|^seeds *=.*|seeds = "'$SEEDS'"|; s|^persistent_peers *=.*|persistent_peers = "'$PEERS'"|' $HOME/.empowerchain/config/config.toml
-sed -i -e "s/^filter_peers *=.*/filter_peers = \"true\" /" $HOME/.empowerchain/config/config.toml
-```
-
-### Configure Gas Prices
-```
-sed -i -e "s|^minimum-gas-prices *=.*|minimum-gas-prices = \"0.025umpwr\"|" $HOME/.empowerchain/config/app.toml
+seeds="a1427b456513ab70967a2a5c618d347bc89e8848@seed.empowerchain.io:26656,6740fa259552a628266a85de8c2a3dee7702b8f9@empower-mainnet-seed.itrocket.net:14656,e16668ddd526f4e114ebb6c4714f0c18c0add8f8@empower-seed.zenscape.one:26656,f2ed98cf518b501b6d1c10c4a16d0dfbc4a9cc98@tenderseed.ccvalidators.com:27001,258f523c96efde50d5fe0a9faeea8a3e83be22ca@seed.empowerchain-1.empower.aviaone.com:10274"
+sed -i -e 's|^seeds *=.*|seeds = "'$seeds'"|' $HOME/.empowerchain/config/config.toml
+peers="192d6c396fe0f9da1b1b700aab8bdd1ce6a49490@empw-m.peers.stavr.tech:22056,9c2aaafb8b9be8cb74705aaf95f4d51506244e3f@65.109.96.189:26656"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.empowerchain/config/config.toml
+sed -i -e "s|^minimum-gas-prices *=.*|minimum-gas-prices = \"0umpwr\"|" $HOME/.empowerchain/config/app.toml
 ```
 
 ### config pruning
 
 ```
-PRUNING="custom"
-PRUNING_KEEP_RECENT="100"
-PRUNING_INTERVAL="19"
-
-sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.empowerchain/config/app.toml
-sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
-\"$PRUNING_KEEP_RECENT\"/" $HOME/.empowerchain/config/app.toml
-sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
-\"$PRUNING_INTERVAL\"/" $HOME/.empowerchain/config/app.toml
+pruning="custom" && \
+pruning_keep_recent="100" && \
+pruning_keep_every="0" && \
+pruning_interval="10" && \
+sed -i -e "s/^pruning *=.*/pruning = \"$pruning\"/" $HOME/.empowerchain/config/app.toml && \
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \"$pruning_keep_recent\"/" $HOME/.empowerchain/config/app.toml && \
+sed -i -e "s/^pruning-keep-every *=.*/pruning-keep-every = \"$pruning_keep_every\"/" $HOME/.empowerchain/config/app.toml && \
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \"$pruning_interval\"/" $HOME/.empowerchain/config/app.toml
 ```
 
 
@@ -139,45 +114,37 @@ Create a `empowerd.service` file in the `/etc/systemd/system` folder with the fo
 You can change `USER` with your Linux user name. You need sudo previlege to do this step.
 
 ```
-sudo tee /etc/systemd/system/empowerd.service > /dev/null << EOF
+sudo tee /etc/systemd/system/empowerd.service << EOF
 [Unit]
-Description=empower node service
+Description=empower
 After=network-online.target
 
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
+ExecStart=$(which empowerd) start
+RestartSec=3
 Restart=on-failure
-RestartSec=10
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.empowerchain"
-Environment="DAEMON_NAME=empowerd"
-Environment="UNSAFE_SKIP_BACKUP=true"
 
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable empowerd
 ```
 
-### Download Latest Snapshot
-```
-curl -L https://snapshots.indonode.net/empower/empower-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.empowerchain
-[[ -f $HOME/.empowerchain/data/upgrade-info.json ]] && cp $HOME/.empowerchain/data/upgrade-info.json $HOME/.empowerchain/cosmovisor/genesis/upgrade-info.json
-```
 
 - Enable Service and Start Node
 
 ```
+sudo systemctl daemon-reload
+sudo systemctl enable empowerd
 sudo systemctl restart empowerd
-sudo journalctl -fu empowerd -o cat
+sudo journalctl -u empowerd -f -o cat
 ```
 
 ### Create Validator
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/mainnet/empower/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/mainnet/empower/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
