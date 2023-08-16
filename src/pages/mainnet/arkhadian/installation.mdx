@@ -50,41 +50,12 @@ cd arkh-blockchain
 git checkout v2.0.0
 go install ./...
 ```
-
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.arkh/cosmovisor/genesis/bin
-
-sudo ln -s $HOME/go/bin/arkhd $HOME/.arkh/cosmovisor/genesis/bin/
-sudo ln -s $HOME/.arkh/cosmovisor/genesis $HOME/.arkh/cosmovisor/current
-```
-
-Verify that you've installed arkhd successfully
-
-```
-arkhd version
-```
-
-
-### Install Cosmovisor
-
-```
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
 ### Config app
 
 ```
+arkhd init <MONIKER> --chain-id arkh
 arkhd config chain-id arkh
 arkhd config keyring-backend file
-```
-
-### Initialize Node
-
-Please change `<YOUR_MONIKER>` To your own Moniker.
-
-```
-arkhd init <YOUR_MONIKER> --chain-id arkh
 ```
 
 ### Download Genesis file and addrbook
@@ -99,6 +70,9 @@ curl -Ls https://raw.githubusercontent.com/vincadian/arkh-blockchain/master/gene
 
 ```
 sed -i -e "s|^seeds *=.*|seeds = \"808f01d4a7507bf7478027a08d95c575e1b5fa3c@asc-dataseed.arkhadian.com:26656 \"|" $HOME/.arkh/config/config.toml
+sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.arkh/config/config.toml
+sed -i -e "s|^seeds *=.*|seeds = \"$SEEDS\"|" $HOME/.arkh/config/config.toml
+sed -i -e "s/^minimum-gas-prices *=.*/minimum-gas-prices = \"0.025arkh\"/" $HOME/.arkh/config/app.toml
 ```
 
 ### Config pruning
@@ -118,42 +92,27 @@ sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
 
 ### create service file and start node
 
-Create service file
-Create a `arkhd.service` file in the `/etc/systemd/system` folder with the following code. 
-You can change `USER` with your Linux user name. You need sudo previlege to do this step.
-
 ```
-sudo tee /etc/systemd/system/arkhd.service > /dev/null << EOF
+sudo tee /etc/systemd/system/arkhd.service > /dev/null <<EOF
 [Unit]
-Description=arkhadian node service
+Description=arkhd Daemon
 After=network-online.target
-
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
-Restart=on-failure
-RestartSec=10
+ExecStart=$(which arkhd) start
+Restart=always
+RestartSec=3
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.arkh"
-Environment="DAEMON_NAME=arkhd"
-Environment="UNSAFE_SKIP_BACKUP=true"
-
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable arkhd
-```
-
-### Download Latest Snapshot
-```
-curl -L https://arkhadian.service.indonode.net/arkhadian-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.arkh
-[[ -f $HOME/.arkh/data/upgrade-info.json ]] && cp $HOME/.arkh/data/upgrade-info.json $HOME/.arkh/cosmovisor/genesis/upgrade-info.json
 ```
 
 - Enable Service and Start Node
 
 ```
+sudo systemctl daemon-reload
+sudo systemctl enable arkhd
 sudo systemctl restart arkhd
 sudo journalctl -fu arkhd -o cat
 ```
@@ -162,6 +121,6 @@ sudo journalctl -fu arkhd -o cat
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/mainnet/arkhadian/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/mainnet/arkhadian/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
