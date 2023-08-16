@@ -44,41 +44,11 @@ go version
 
 ```
 cd $HOME
-rm -rf decentr/
-git clone https://github.com/Decentr-net/decentr
-cd decentr/
+rm -rf decentr
+git clone https://github.com/Decentr-net/decentr.git
 git checkout v1.6.2
-make build
-```
-
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.decentr/cosmovisor/genesis/bin
-mv build/linux/decentrd $HOME/.decentr/cosmovisor/genesis/bin/
-rm -rf build
-```
-```
-sudo ln -s $HOME/.decentr/cosmovisor/genesis $HOME/.decentr/cosmovisor/current
-sudo ln -s $HOME/.decentr/cosmovisor/current/bin/decentrd /usr/local/bin/decentrd
-```
-
-Verify that you've installed decentrd successfully
-
-```
-decentrd version
-```
-
-### Install Cosmovisor
-
-```
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
-
-```
-decentrd config chain-id mainnet-3
-decentrd config keyring-backend file
+cd decentr
+make install
 ```
 
 ### Initialize Node
@@ -86,7 +56,9 @@ decentrd config keyring-backend file
 Please change `<YOUR_MONIKER>` To your own Moniker.
 
 ```
-decentrd init <YOUR_MONIKER> --chain-id mainnet-3
+decentrd init $MONIKER --chain-id mainnet-3
+decentrd config chain-id mainnet-3
+decentrd config keyring-backend file
 ```
 
 ### Download Genesis file and addrbook
@@ -94,25 +66,22 @@ decentrd init <YOUR_MONIKER> --chain-id mainnet-3
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/decentr/genesis.json > $HOME/.decentr/config/genesis.json
+wget -O $HOME/.decentr/config/genesis.json https://raw.githubusercontent.com/Decentr-net/mainnets/master/3.0/genesis.json
 ```
 
 - Addrbook
 
 ```
-curl -Ls https://snapshots.indonode.net/decentr/addrbook.json > $HOME/.decentr/config/addrbook.json
+wget -O $HOME/.decentr/config/addrbook.json https://raw.githubusercontent.com/vinjan23/Mainnet/main/Decentr/addrbook.json
 ```
 
 ### Configure Seeds and Peers
 
 ```
 sed -E -i 's/seeds = \".*\"/seeds = \"7708addcfb9d4ff394b18fbc6c016b4aaa90a10a@ares.mainnet.decentr.xyz:26656,8a3485f940c3b2b9f0dd979a16ea28de154f14dd@calliope.mainnet.decentr.xyz:26656,87490fd832f3226ac5d090f6a438d402670881d0@euterpe.mainnet.decentr.xyz:26656,3261bff0b7c16dcf6b5b8e62dd54faafbfd75415@hera.mainnet.decentr.xyz:26656,5f3cfa2e3d5ed2c2ef699c8593a3d93c902406a9@hermes.mainnet.decentr.xyz:26656,a529801b5390f56d5c280eaff4ae95b7163e385f@melpomene.mainnet.decentr.xyz:26656,385129dbe71bceff982204afa11ed7fa0ee39430@poseidon.mainnet.decentr.xyz:26656,35a934228c32ad8329ac917613a25474cc79bc08@terpsichore.mainnet.decentr.xyz:26656,0fd62bcd1de6f2e3cfc15852cdde9f3f8a7987e4@thalia.mainnet.decentr.xyz:26656,bd99693d0dbc855b0367f781fb48bf1ca6a6a58b@zeus.mainnet.decentr.xyz:26656\"/' $HOME/.decentr/config/config.toml
-```
-
-### Set Minimum Gas Price
-```
 sed -i 's|^minimum-gas-prices *=.*|minimum-gas-prices = "0.001udec"|g' $HOME/.decentr/config/app.toml
 ```
+
 
 ### Config pruning
 
@@ -138,35 +107,27 @@ You can change `USER` with your Linux user name. You need sudo previlege to do t
 ```
 sudo tee /etc/systemd/system/decentrd.service > /dev/null << EOF
 [Unit]
-Description=decentrd node service
+Description=decentrd mainnet
 After=network-online.target
 
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
+ExecStart=$(which decentrd) start
 Restart=on-failure
-RestartSec=10
+RestartSec=3
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.decentr"
-Environment="DAEMON_NAME=decentrd"
-Environment="UNSAFE_SKIP_BACKUP=true"
 
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable decentrd
 ```
 
-### Download Latest Snapshot
-```
-curl -L https://snapshots.indonode.net/decentr/decentr-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.decentr
-[[ -f $HOME/.decentr/data/upgrade-info.json ]] && cp $HOME/.decentr/data/upgrade-info.json $HOME/.decentr/cosmovisor/genesis/upgrade-info.json
-```
 
 - Enable Service and Start Node
 
 ```
+sudo systemctl daemon-reload
+sudo systemctl enable decentrd
 sudo systemctl restart decentrd
 sudo journalctl -fu decentrd -o cat
 ```
@@ -175,6 +136,6 @@ sudo journalctl -fu decentrd -o cat
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/mainnet/decentr/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/mainnet/decentr/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
