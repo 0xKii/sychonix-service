@@ -1,0 +1,18 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Peers
+icon: archway
+network: Mainnet
+chain: archway-1
+version: 1.0.0
+---
+
+Live Peers 
+
+Automatically adding Live peers to your config.toml file
+```
+SEEDS="3ba7bf08f00e228026177e9cdc027f6ef6eb2b39@35.232.234.58:26656"
+sed -i -e "s|^seeds *=.*|seeds = \"$SEEDS\"|" $HOME/.archway/config/config.toml
+PEERS=
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.archway/config/config.tom
+```
