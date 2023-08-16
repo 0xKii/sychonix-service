@@ -9,6 +9,6 @@ version: v1.0.0
 Live Peers 
 
 ```
-PEERS="$(curl -sS https://rpc.empower.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
-sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.empowerchain/config/config.toml
+peers="192d6c396fe0f9da1b1b700aab8bdd1ce6a49490@empw-m.peers.stavr.tech:22056,9c2aaafb8b9be8cb74705aaf95f4d51506244e3f@65.109.96.189:26656"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.empowerchain/config/config.toml
 ```
