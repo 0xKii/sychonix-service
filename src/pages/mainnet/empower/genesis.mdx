@@ -9,5 +9,6 @@ version: v1.0.0
 ## instruction
 
 ```
-curl -Ls https://snapshots.indonode.net/empower/genesis.json > $HOME/.empowerchain/config/genesis.json
+URL=https://github.com/EmpowerPlastic/empowerchain/raw/main/mainnet/empowerchain-1/genesis.tar.gz
+curl -L $URL | tar -xz -C $HOME/.empowerchain/config/
 ```
