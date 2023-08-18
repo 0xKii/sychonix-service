@@ -52,41 +52,14 @@ git checkout v1.0.7
 make build
 ```
 
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.planqd/cosmovisor/genesis/bin
-mv build/planqd $HOME/.planqd/cosmovisor/genesis/bin/
-rm -rf build
+### Initialize Node
 
-
-sudo ln -s $HOME/.planqd/cosmovisor/genesis $HOME/.planqd/cosmovisor/current
-sudo ln -s $HOME/.planqd/cosmovisor/current/bin/planqd /usr/local/bin/planqd
-```
-
-Verify that you've installed planq successfully
-
-```
-planqd version
-```
-
-### Install Cosmovisor
-```
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
+Please change `<MONIKER>` To your own Moniker.
 
 ```
 planqd config chain-id planq_7070-2
+planqd init $MONIKER --chain-id planq_7070-2
 planqd config keyring-backend file
-```
-
-### Initialize Node
-
-Please change `<YOUR_MONIKER>` To your own Moniker.
-
-```
-planqd init <YOUR_MONIKER> --chain-id planq_7070-2
 ```
 
 ### Download Genesis file and addrbook
@@ -94,48 +67,38 @@ planqd init <YOUR_MONIKER> --chain-id planq_7070-2
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/planq/genesis.json > $HOME/.planqd/config/genesis.json
+wget https://raw.githubusercontent.com/planq-network/networks/main/mainnet/genesis.json
+mv genesis.json ~/.planqd/config/
 ```
 
 - Addrbook
 
 ```
-curl -Ls https://snapshots.indonode.net/planq/addrbook.json > $HOME/.planqd/config/addrbook.json
+wget -O $HOME/.planqd/config/addrbook.json "https://raw.githubusercontent.com/vinjan23/Mainnet/main/Planq/addrbook.json"
 ```
 
 ### Configure Seeds and Peers
 
 ```
 SEEDS=`curl -sL https://raw.githubusercontent.com/planq-network/networks/main/mainnet/seeds.txt | awk '{print $1}' | paste -s -d, -`
-PEERS=`curl -sL https://raw.githubusercontent.com/planq-network/networks/main/mainnet/peers.txt | sort -R | head -n 10 | awk '{print $1}' | paste -s -d, -`
-
-sed -i -e "s/^seeds *=.*/seeds = \"$SEEDS\"/; s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.planqd/config/config.toml
+sed -i.bak -e "s/^seeds =.*/seeds = \"$SEEDS\"/" ~/.planqd/config/config.toml
+sed -i 's/max_num_inbound_peers =.*/max_num_inbound_peers = 100/g' $HOME/.planqd/config/config.toml
+sed -i 's/max_num_outbound_peers =.*/max_num_outbound_peers = 100/g' $HOME/.planqd/config/config.toml
+sed -i.bak -e "s/^minimum-gas-prices *=.*/minimum-gas-prices = \"0aplanq\"/;" ~/.planqd/config/app.toml
+sed -i -e "s/prometheus = false/prometheus = true/" $HOME/.planqd/config/config.toml
 ```
 
 ### config pruning
 
 ```
-PRUNING="custom"
-PRUNING_KEEP_RECENT="100"
-PRUNING_INTERVAL="19"
-
-sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.planqd/config/app.toml
-sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
-\"$PRUNING_KEEP_RECENT\"/" $HOME/.planqd/config/app.toml
-sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
-\"$PRUNING_INTERVAL\"/" $HOME/.planqd/config/app.toml
-```
-
-### Set allowed inbound and outbound peers (Optional)
-
-```
-INBOUND=120
-OUTBOUND=60
-
-sed -i -e "s/^max_num_inbound_peers *=.*/max_num_inbound_peers = \
-\"$INBOUND\"/" $HOME/.planqd/config/config.toml
-sed -i -e "s/^max_num_outbound_peers *=.*/max_num_outbound_peers = \
-\"$OUTBOUND\"/" $HOME/.planqd/config/config.toml
+pruning="custom"
+pruning_keep_recent="100"
+pruning_keep_every="0"
+pruning_interval="10"
+sed -i -e "s/^pruning *=.*/pruning = \"$pruning\"/" $HOME/.planqd/config/app.toml
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \"$pruning_keep_recent\"/" $HOME/.planqd/config/app.toml
+sed -i -e "s/^pruning-keep-every *=.*/pruning-keep-every = \"$pruning_keep_every\"/" $HOME/.planqd/config/app.toml
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \"$pruning_interval\"/" $HOME/.planqd/config/app.toml
 ```
 
 ### create service file and start node
@@ -147,43 +110,30 @@ You can change `USER` with your Linux user name. You need sudo previlege to do t
 ```
 sudo tee /etc/systemd/system/planqd.service > /dev/null << EOF
 [Unit]
-Description=planqd node service
+Description=planq-mainnet node service
 After=network-online.target
-
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
-Restart=on-failure
-RestartSec=10
+ExecStart=$(which planqd) start
+Restart=always
+RestartSec=3
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.planqd"
-Environment="DAEMON_NAME=planqd"
-Environment="UNSAFE_SKIP_BACKUP=true"
-
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable planqd
-```
-
-### Download Latest Snapshot
-```
-curl -L https://snapshots.indonode.net/planq/planq-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.planqd
-[[ -f $HOME/.planqd/data/upgrade-info.json ]] && cp $HOME/.planqd/data/upgrade-info.json $HOME/.planqd/cosmovisor/genesis/upgrade-info.json
 ```
 
 - Start Node
 
 ```
-sudo systemctl restart planqd
-sudo journalctl -fu planqd -o cat
+sudo systemctl enable planqd && sudo systemctl daemon-reload
+sudo systemctl restart planqd && sudo journalctl -u planqd -f -o cat
 ```
 
 ### Create Validator
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/mainnet/planq/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/mainnet/planq/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
