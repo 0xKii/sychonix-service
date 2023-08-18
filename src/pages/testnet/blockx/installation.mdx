@@ -1,0 +1,135 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Installation Node
+network: Testnet
+icon: blockx
+chain: blockx_50-1
+version: v10.0.0
+---
+
+### Hardware requirements
+
+The following requirements are recommended for running Defund:
+
+- 4 or more physical CPU cores
+- At least 200GB of SSD disk storage
+- At least 8GB of memory (RAM)
+- At least 100mbps network bandwidth
+
+
+### Install dependencies Required
+
+```
+sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+```
+
+### Install go
+
+We are gonna use GO Version 1.19.5
+If you already have GO installed you can skip this 
+
+```
+ver="1.20.4"
+cd $HOME
+wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"
+rm "go$ver.linux-amd64.tar.gz"
+echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bash_profile
+source ~/.bash_profile
+go version
+```
+
+### Install binary
+
+```
+curl -LO https://github.com/defi-ventures/blockx-node-public-compiled/releases/download/v10.0.0/blockxd
+chmod +x blockxd
+sudo mv ./blockxd /usr/local/bin
+```
+
+### Initialize Node
+
+Please change `<MONIKER>` To your own Moniker.
+
+```
+blockxd init $MONIKER --chain-id blockx_50-1
+blockxd config chain-id blockx_50-1
+blockxd config keyring-backend test
+```
+
+### Download Genesis file and addrbook
+
+- Genesis
+
+```
+wget -O $HOME/.blockxd/config/genesis.json "https://raw.githubusercontent.com/defi-ventures/blockx-node-public-compiled/Atlantis-Testnet/genesis.json"
+```
+
+- Addrbook
+
+```
+wget -O $HOME/.blockxd/config/addrbook.json "https://raw.githubusercontent.com/vinjan23/Testnet.Guide/main/Blockxd/addrbook.json"
+```
+### Peer & Seed & Gas
+```
+peers="3bdc1c076399ee1090b1b7efa0474ce1a1cb191a@146.190.153.165:26656,49a5a62543f5fec60db42b00d9ebe192c3185e15@146.190.157.123:26656,97d6e80a47707e98ab8ba02b0a59d490dab8eeb2@152.228.208.164:26656,fa3cc9935503c3e8179b1eef1c1fde20e3354ca3@51.159.172.34:26656,a9775b0118c794bc5a6359b68260ecec36cdbfa4@143.198.69.165:14356,b97cb67fd594a3ba458c82d12475f72f556ab804@3.145.104.95:26656,85270df0f25f8a3c56884a5f7bfe0a02b49d13d7@193.34.213.6:26656"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.blockxd/config/config.toml
+sed -i -e "s|^seeds *=.*|seeds = \"$SEEDS\"|" $HOME/.blockxd/config/config.toml
+sed -i -e "s|^minimum-gas-prices *=.*|minimum-gas-prices = \"0abcx\"|" $HOME/.blockxd/config/app.toml
+```
+
+### config pruning
+
+```
+PRUNING="custom"
+PRUNING_KEEP_RECENT="100"
+PRUNING_INTERVAL="19"
+sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.blockxd/config/app.toml
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
+\"$PRUNING_KEEP_RECENT\"/" $HOME/.blockxd/config/app.toml
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
+\"$PRUNING_INTERVAL\"/" $HOME/.blockxd/config/app.toml
+```
+
+
+### create service file and start node
+
+Create service file
+Create a `blockxd.service` file in the `/etc/systemd/system` folder with the following code. 
+You can change `USER` with your Linux user name. You need sudo previlege to do this step.
+
+```
+sudo tee /etc/systemd/system/blockxd.service > /dev/null << EOF
+[Unit]
+Description=Blockxd node
+After=network-online.target
+
+[Service]
+User=$USER
+ExecStart=$(which blockxd) start --home $HOME/.blockxd
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+- Enable Service and Start Node
+
+```
+systemctl daemon-reload
+systemctl enable blockxd
+systemctl restart blockxd
+journalctl -fu blockxd -ocat
+```
+
+### Create Validator
+
+Heads up to the Cheat Sheets to create validator
+
+<a href="https://service.vinjan.xyz/testnet/blockx/cheat" target="_blank">
+  <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
+</a>
