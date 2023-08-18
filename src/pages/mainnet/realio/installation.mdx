@@ -25,11 +25,8 @@ sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang p
 
 ### Install go
 
-We are gonna use GO Version 1.19.5
-If you already have GO installed you can skip this 
-
 ```
-ver="1.20.2"
+ver="1.20.4"
 cd $HOME
 wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
 sudo rm -rf /usr/local/go
@@ -44,40 +41,10 @@ go version
 
 ```
 cd $HOME
-rm -rf realio-network/
 git clone https://github.com/realiotech/realio-network.git
-cd realio-network/
-git checkout v0.8.2
-make build
-```
-
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.realio-network/cosmovisor/genesis/bin
-mv build/realio-networkd $HOME/.realio-network/cosmovisor/genesis/bin/
-rm -rf build
-
-
-sudo ln -s $HOME/.realio-network/cosmovisor/genesis $HOME/.realio-network/cosmovisor/current
-sudo ln -s $HOME/.realio-network/cosmovisor/current/bin/realio-networkd /usr/local/bin/realio-networkd
-```
-
-Verify that you've installed realio-networkd successfully
-
-```
-realio-networkd version
-```
-
-### Install Cosmovisor
-```
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
-
-```
-realio-networkd config chain-id realionetwork_3301-1
-realio-networkd config keyring-backend file
+cd realio-network
+git checkout v0.8.3
+make install
 ```
 
 ### Initialize Node
@@ -85,7 +52,9 @@ realio-networkd config keyring-backend file
 Please change `<YOUR_MONIKER>` To your own Moniker.
 
 ```
-realio-networkd init <YOUR_MONIKER> --chain-id realionetwork_3301-1
+realio-networkd init $MONIKER --chain-id realionetwork_3301-1
+realio-networkd config chain-id realionetwork_3301-1
+realio-networkd config keyring-backend file
 ```
 
 ### Download Genesis file and addrbook
@@ -93,21 +62,28 @@ realio-networkd init <YOUR_MONIKER> --chain-id realionetwork_3301-1
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/realio/genesis.json > $HOME/.realio-network/config/genesis.json
+curl https://raw.githubusercontent.com/realiotech/mainnet/master/realionetwork_3301-1/genesis.json > $HOME/.realio-network/config/genesis.json
 ```
 
 - Addrbook
 
 ```
-curl -Ls https://snapshots.indonode.net/realio/addrbook.json > $HOME/.realio-network/config/addrbook.json
+wget -O $HOME/.realio-network/config/addrbook.json "https://snapshot.genznodes.dev/realio/addrbook.json"
 ```
 
 ### Configure Seeds and Peers
 
 ```
-SEEDS="a5039f260cd848facfbe7fbe62bf3e8adfce9c98@realio-mainnet-seed.itrocket.net:23656"
-PEERS="2815cc1437461f808a7f022c0df679fa27918dbc@realio-mainnet-peer.itrocket.net:23656"
-sed -i 's|^seeds *=.*|seeds = "'$SEEDS'"|; s|^persistent_peers *=.*|persistent_peers = "'$PEERS'"|' $HOME/.realio-network/config/config.toml
+sed -i.bak -e "s/^minimum-gas-prices *=.*/minimum-gas-prices = \"0.0ario\"/" $HOME/.realio-network/config/app.toml
+sed -i -e "s/^filter_peers *=.*/filter_peers = \"true\"/" $HOME/.realio-network/config/config.toml
+external_address=$(wget -qO- eth0.me) 
+sed -i.bak -e "s/^external_address *=.*/external_address = \"$external_address:26656\"/" $HOME/.realio-network/config/config.toml
+peers="b2e50a471151aecedde282055a8f0e829aa2170b@65.109.29.224:28656,759b796d1f7c8c8362b525aaad2531591762723a@88.198.32.17:46656,5d2c9ea486a09700435ee1c0ba5291f8f1078c96@10.233.89.226:26656,4361e0e3f73ece1e6fcb9f603f0ba4ccd8ae957b@142.132.202.50:39656,9521958ef1eea934bba7f28376b7341e4dbb5f36@65.109.104.118:60856,00b261d9c9b845ce42964a3a3f6c68173875e981@65.109.28.177:30656,2c832dcd9e41d988fadf8d1af8d95640ce009398@realio.sergo.dev:12263,2e594b4782b7273ebebe47351885842c85abe8f5@65.108.229.93:32656,704eb376ec58ce6b4d1df7dfd7f0be7e79d5f200@5.9.147.22:23656,271f194229b4ee9be89777daa3ef8201553865cc@mainnet-realio.konsortech.xyz:35656,6e148794b697c64f54956ff18ca3d22fc9d95c96@148.113.6.169:30656,4a98ef79d9c80016766e247b10afe46f4cdb9892@95.216.114.212:18656,a09acd01e40c94b58cb9109fa74ce53c2220fd26@161.97.182.71:46656,cd9d9af6b7a99af3c5c920f7a054d37e297222e4@65.108.224.156:13656,daea809589ac871c6c9f450ca1cdfd5ab2320e06@57.128.110.81:26656,b09d477f5b59e5e99632ad3a8a11806381efa46f@realio.peers.stavr.tech:21096,e9cfaccc92b425fc48f2671ae9fab25c3d25926c@142.132.194.157:26557,d99c807a58f876684618af016409a09186065851@173.249.59.70:32656"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.realio-network/config/config.toml
+seeds=""
+sed -i.bak -e "s/^seeds =.*/seeds = \"$seeds\"/" $HOME/.realio-network/config/config.toml
+sed -i 's/max_num_inbound_peers =.*/max_num_inbound_peers = 50/g' $HOME/.realio-network/config/config.toml
+sed -i 's/max_num_outbound_peers =.*/max_num_outbound_peers = 50/g' $HOME/.realio-network/config/config.toml
 ```
 
 ### config pruning
@@ -116,7 +92,6 @@ sed -i 's|^seeds *=.*|seeds = "'$SEEDS'"|; s|^persistent_peers *=.*|persistent_p
 PRUNING="custom"
 PRUNING_KEEP_RECENT="100"
 PRUNING_INTERVAL="19"
-
 sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.realio-network/config/app.toml
 sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
 \"$PRUNING_KEEP_RECENT\"/" $HOME/.realio-network/config/app.toml
@@ -132,26 +107,21 @@ Create a `realio-networkd.service` file in the `/etc/systemd/system` folder with
 You can change `USER` with your Linux user name. You need sudo previlege to do this step.
 
 ```
-sudo tee /etc/systemd/system/realio-networkd.service > /dev/null << EOF
+sudo tee /etc/systemd/system/realio-networkd.service > /dev/null <<EOF
 [Unit]
-Description=realio-testnet node service
+Description=realio
 After=network-online.target
 
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
-Restart=on-failure
-RestartSec=10
+ExecStart=$(which realio-networkd) start
+Restart=always
+RestartSec=3
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.realio-network"
-Environment="DAEMON_NAME=realio-networkd"
-Environment="UNSAFE_SKIP_BACKUP=true"
 
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable realio-networkd
 ```
 
 ### Download Latest Snapshot
@@ -163,13 +133,15 @@ curl -L https://snapshots.indonode.net/realio/realio-snapshot.tar.lz4 | lz4 -dc 
 - Start Node
 
 ```
+sudo systemctl daemon-reload
+sudo systemctl enable realio-networkd
 sudo systemctl restart realio-networkd
-sudo journalctl -fu realio-networkd -o cat
+sudo journalctl -u realio-networkd -f -o cat
 ```
 ### Create Validator
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/mainnet/realio/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/mainnet/realio/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
