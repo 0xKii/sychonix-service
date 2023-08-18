@@ -44,50 +44,20 @@ go version
 
 ```
 cd $HOME
-rm -rf terp-core/
 git clone https://github.com/terpnetwork/terp-core.git
 cd terp-core/
 git checkout barberry
-make build
-```
-
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.terp/cosmovisor/genesis/bin
-mv build/terpd $HOME/.terp/cosmovisor/genesis/bin/
-rm -rf build
-
-
-sudo ln -s $HOME/.terp/cosmovisor/genesis $HOME/.terp/cosmovisor/current
-sudo ln -s $HOME/.terp/cosmovisor/current/bin/terpd /usr/local/bin/terpd
-```
-
-
-Verify that you've installed terpd successfully
-
-```
-terpd version
-```
-
-### Install Cosmovisor
-```
-
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
-
-```
-terpd config chain-id morocco-1
-terpd config keyring-backend file
+make install
 ```
 
 ### Initialize Node
 
-Please change `<YOUR_MONIKER>` To your own Moniker.
+Please change `<MONIKER>` To your own Moniker.
 
 ```
-terpd init <YOUR_MONIKER> --chain-id morocco-1
+terpd init $MONIKER --chain-id morocco-1
+terpd config chain-id morocco-1
+terpd config keyring-backend file
 ```
 
 ### Download Genesis file and addrbook
@@ -95,13 +65,13 @@ terpd init <YOUR_MONIKER> --chain-id morocco-1
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/terp/genesis.json > $HOME/.terp/config/genesis.json
+curl -s https://raw.githubusercontent.com/terpnetwork/mainnet/main/morocco-1/genesis.json > $HOME/.terp/config/genesis.json
 ```
 
 - Addrbook
 
 ```
-curl -Ls https://snapshots.indonode.net/terp/addrbook.json > $HOME/.terp/config/addrbook.json
+wget -O $HOME/.terp/config/addrbook.json https://raw.githubusercontent.com/vinjan23/Mainnet/main/Terp/addrbook.json
 ```
 
 ### Configure Seeds and Peers
@@ -110,6 +80,8 @@ curl -Ls https://snapshots.indonode.net/terp/addrbook.json > $HOME/.terp/config/
 SEEDS="c71e63b5da517984d55d36d00dc0dc2413d0ce03@seed.terp.network:26656"
 PEERS=""
 sed -i 's|^seeds *=.*|seeds = "'$SEEDS'"|; s|^persistent_peers *=.*|persistent_peers = "'$PEERS'"|' $HOME/.terp/config/config.toml
+sed -i 's|^minimum-gas-prices *=.*|minimum-gas-prices = "0.000uterp"|g' $HOME/.terp/config/app.toml
+sed -i 's|^prometheus *=.*|prometheus = true|' $HOME/.terp/config/config.toml
 ```
 
 ### config pruning
@@ -118,7 +90,6 @@ sed -i 's|^seeds *=.*|seeds = "'$SEEDS'"|; s|^persistent_peers *=.*|persistent_p
 PRUNING="custom"
 PRUNING_KEEP_RECENT="100"
 PRUNING_INTERVAL="19"
-
 sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.terp/config/app.toml
 sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
 \"$PRUNING_KEEP_RECENT\"/" $HOME/.terp/config/app.toml
@@ -136,42 +107,33 @@ You can change `USER` with your Linux user name. You need sudo previlege to do t
 ```
 sudo tee /etc/systemd/system/terpd.service > /dev/null << EOF
 [Unit]
-Description=terp-testnet node service
+Description=TerpNetwork Node
 After=network-online.target
 
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
+ExecStart=$(which terpd) start
 Restart=on-failure
-RestartSec=10
+RestartSec=3
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.terp"
-Environment="DAEMON_NAME=terpd"
-Environment="UNSAFE_SKIP_BACKUP=true"
 
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable terpd
-```
-
-### Download Latest Snapshot
-```
-curl -L https://snapshots.indonode.net/terp/terp-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.terp
-[[ -f $HOME/.terp/data/upgrade-info.json ]] && cp $HOME/.terp/data/upgrade-info.json $HOME/.terp/cosmovisor/genesis/upgrade-info.json
 ```
 
 - Start Node
 
 ```
+sudo systemctl daemon-reload
+sudo systemctl enable terpd
 sudo systemctl restart terpd
-sudo journalctl -fu terpd -o cat
+sudo journalctl -u terpd -f -o cat
 ```
 ### Create Validator
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/mainnet/terp/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/mainnet/terp/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
