@@ -4,7 +4,7 @@ title: Installation Node
 network: Testnet
 icon: elys
 chain: elystestnet-1
-version: v0.5.4
+version: v0.9.0
 ---
 
 ### Hardware requirements
@@ -44,49 +44,20 @@ go version
 
 ```
 cd $HOME
-rm -rf elys
-git clone https://github.com/elys-network/elys.git
+git clone https://github.com/elys-network/elys
 cd elys
-git fetch --all
-git checkout v0.5.4
-make build
-```
-
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.elys/cosmovisor/genesis/bin
-mv elysd $HOME/.elys/cosmovisor/genesis/bin/
-
-
-
-sudo ln -s $HOME/.elys/cosmovisor/genesis $HOME/.elys/cosmovisor/current
-sudo ln -s $HOME/.elys/cosmovisor/current/bin/elysd /usr/local/bin/elysd
-```
-
-Verify that you've installed elysd successfully
-
-```
-elysd version
-```
-
-### Install Cosmovisor
-```
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
-
-```
-elysd config chain-id elystestnet-1
-elysd config keyring-backend test
+git checkout v0.9.0
+make install
 ```
 
 ### Initialize Node
 
-Please change `<YOUR_MONIKER>` To your own Moniker.
+Please change `<MONIKER>` To your own Moniker.
 
 ```
-elysd init <YOUR_MONIKER> --chain-id elystestnet-1
+elysd init $MONIKER --chain-id elystestnet-1
+elysd config chain-id elystestnet-1
+elysd config keyring-backend test
 ```
 
 ### Download Genesis file and addrbook
@@ -94,21 +65,14 @@ elysd init <YOUR_MONIKER> --chain-id elystestnet-1
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/elys-t/genesis.json > $HOME/.elys/config/genesis.json
-```
-
-- Addrbook
-
-```
-curl -Ls https://snapshots.indonode.net/elys-t/addrbook.json > $HOME/.elys/config/addrbook.json
+wget -O $HOME/.elys/config/genesis.json https://raw.githubusercontent.com/elys-network/elys/main/chain/genesis.json
 ```
 
 ### Configure Seeds and Peers
 
 ```
-PEERS="$(curl -sS https://rpc.elys-t.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
-sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.elys/config/config.toml
 sed -i 's/seeds = ""/seeds = "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@testnet-seeds.polkachu.com:22056"/' ~/.elys/config/config.toml
+sed -i -e "s|^minimum-gas-prices *=.*|minimum-gas-prices = \"0uelys\"|" $HOME/.elys/config/app.toml
 ```
 
 ### config pruning
@@ -117,7 +81,6 @@ sed -i 's/seeds = ""/seeds = "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@testnet-s
 PRUNING="custom"
 PRUNING_KEEP_RECENT="100"
 PRUNING_INTERVAL="19"
-
 sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.elys/config/app.toml
 sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
 \"$PRUNING_KEEP_RECENT\"/" $HOME/.elys/config/app.toml
@@ -133,44 +96,34 @@ Create a `elysd.service` file in the `/etc/systemd/system` folder with the follo
 You can change `USER` with your Linux user name. You need sudo previlege to do this step.
 
 ```
-sudo tee /etc/systemd/system/elysd.service > /dev/null << EOF
+sudo tee /etc/systemd/system/elysd.service > /dev/null <<EOF
 [Unit]
-Description=elys-tesnet node service
+Description=elys-testnet
 After=network-online.target
 
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
+ExecStart=$(which elysd) start
 Restart=on-failure
-RestartSec=10
+RestartSec=3
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.elys"
-Environment="DAEMON_NAME=elysd"
-Environment="UNSAFE_SKIP_BACKUP=true"
 
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable elysd
-```
-
-### Download Latest Snapshot
-```
-curl -L https://snapshots.indonode.net/elys-t/elys-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.elys
-[[ -f $HOME/.elys/data/upgrade-info.json ]] && cp $HOME/.elys/data/upgrade-info.json $HOME/.elys/cosmovisor/genesis/upgrade-info.json
 ```
 
 - Enable Service and Start Node
 
 ```
-sudo systemctl restart elysd
-sudo journalctl -fu elysd -o cat
+sudo systemctl daemon-reload
+sudo systemctl enable elysd
+sudo systemctl restart elysd && sudo journalctl -u elysd -f -o cat
 ```
 ### Create Validator
 
 Heads up to the Cheat Sheets to create validator
 
-<a href="https://www.indonode.net/testnet/elys/cheat" target="_blank">
+<a href="https://service.vinjan.xyz/testnet/elys/cheat" target="_blank">
   <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
 </a>
