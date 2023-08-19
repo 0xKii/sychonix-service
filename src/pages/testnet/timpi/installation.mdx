@@ -25,11 +25,11 @@ sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang p
 
 ### Install go
 
-We are gonna use GO Version 1.19.5
+
 If you already have GO installed you can skip this 
 
 ```
-ver="1.19.5"
+ver="1.20.4"
 cd $HOME
 wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
 sudo rm -rf /usr/local/go
@@ -44,10 +44,11 @@ go version
 
 ```
 cd $HOME
-rm -rf Timpi-ChainTN
 git clone https://github.com/Timpi-official/Timpi-ChainTN.git
 cd Timpi-ChainTN
-go build -o TimpiChain cmd/TimpiChain/main.go
+cd cmd/TimpiChain
+go build
+mv TimpiChain $HOME/go/bin/TimpiChain
 ```
 
 Verify that you've installed TimpiChain successfully
@@ -56,35 +57,14 @@ Verify that you've installed TimpiChain successfully
 TimpiChain version
 ```
 
-### Prepare Cosmovisor
-```
-mkdir -p $HOME/.TimpiChain/cosmovisor/genesis/bin
-mv TimpiChain $HOME/.TimpiChain/cosmovisor/genesis/bin/
-
-
-sudo ln -s $HOME/.TimpiChain/cosmovisor/genesis $HOME/.TimpiChain/cosmovisor/current
-sudo ln -s $HOME/.TimpiChain/cosmovisor/current/bin/TimpiChain /usr/local/bin/TimpiChain
-```
-
-### Install Cosmovisor
-```
-
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
-```
-
-### Config app
-
-```
-TimpiChain config chain-id TimpiChainTN2
-TimpiChain config keyring-backend test
-```
-
 ### Initialize Node
 
-Please change `<YOUR_MONIKER>` To your own Moniker.
+Please change `<MONIKER>` To your own Moniker.
 
 ```
-TimpiChain init <YOUR_MONIKER> --chain-id TimpiChainTN2
+TimpiChain init $MONIKER --chain-id TimpiChainTN2
+TimpiChain config chain-id TimpiChainTN2
+TimpiChain config keyring-backend test
 ```
 
 ### Download Genesis file and addrbook
@@ -92,21 +72,22 @@ TimpiChain init <YOUR_MONIKER> --chain-id TimpiChainTN2
 - Genesis
 
 ```
-curl -Ls https://snapshots.indonode.net/timpi-t/genesis.json > $HOME/.TimpiChain/config/genesis.json
+wget -O $HOME/.TimpiChain/config/genesis.json "https://raw.githubusercontent.com/vinjan23/Testnet.Guide/main/Timpi/genesis.json"
 ```
 
 - Addrbook
 
 ```
-curl -Ls https://snapshots.indonode.net/timpi-t/addrbook.json > $HOME/.TimpiChain/config/addrbook.json
+wget -O $HOME/.TimpiChain/config/addrbook.json https://raw.githubusercontent.com/vinjan23/Testnet.Guide/main/Timpi/addrbook.json
 ```
 
 ### Configure Seeds and Peers
 
 ```
-PEERS="$(curl -sS https://rpc.timpi-t.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
-sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.TimpiChain/config/config.toml
-sed -i -e "s/^filter_peers *=.*/filter_peers = \"true\" /" $HOME/.TimpiChain/config/config.toml
+SEEDS=""
+sed -i.bak -e "s/^seeds =.*/seeds = \"$seeds\"/" $HOME/.TimpiChain/config/config.toml
+peers="16700793659365235701335a41dd7b2b317518dd@173.249.54.208:26656,7a7867cf1d286098641bb8b47bf1d8c555e2f385@65.108.206.74:23656"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.TimpiChain/config/config.toml
 ```
 
 ### Configure Gas Prices
@@ -120,7 +101,6 @@ sed -i -e "s|^minimum-gas-prices *=.*|minimum-gas-prices = \"0utimpiTN\"|" $HOME
 PRUNING="custom"
 PRUNING_KEEP_RECENT="100"
 PRUNING_INTERVAL="19"
-
 sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.TimpiChain/config/app.toml
 sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
 \"$PRUNING_KEEP_RECENT\"/" $HOME/.TimpiChain/config/app.toml
@@ -136,37 +116,36 @@ Create a `TimpiChain.service` file in the `/etc/systemd/system` folder with the 
 You can change `USER` with your Linux user name. You need sudo previlege to do this step.
 
 ```
-sudo tee /etc/systemd/system/TimpiChain.service > /dev/null << EOF
+sudo tee /etc/systemd/system/TimpiChain.service << EOF
 [Unit]
-Description=timpi-testnet node service
+Description=TimpiChain
 After=network-online.target
 
 [Service]
 User=$USER
-ExecStart=$(which cosmovisor) run start
+ExecStart=$(which TimpiChain) start
+RestartSec=3
 Restart=on-failure
-RestartSec=10
 LimitNOFILE=65535
-Environment="DAEMON_HOME=$HOME/.TimpiChain"
-Environment="DAEMON_NAME=TimpiChain"
-Environment="UNSAFE_SKIP_BACKUP=true"
 
 [Install]
 WantedBy=multi-user.target
 EOF
-sudo systemctl daemon-reload
-sudo systemctl enable TimpiChain
-```
-
-### Download Latest Snapshot
-```
-curl -L https://snapshots.indonode.net/timpi-t/timpi-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.TimpiChain
-[[ -f $HOME/.TimpiChain/data/upgrade-info.json ]] && cp $HOME/.TimpiChain/data/upgrade-info.json $HOME/.TimpiChain/cosmovisor/genesis/upgrade-info.json
 ```
 
 - Enable Service and Start Node
 
 ```
+sudo systemctl daemon-reload
+sudo systemctl enable TimpiChain
 sudo systemctl restart TimpiChain
-sudo journalctl -fu TimpiChain -o cat
+sudo journalctl -u TimpiChain -f -o cat
 ```
+
+### Create Validator
+
+Heads up to the Cheat Sheets to create validator
+
+<a href="https://service.vinjan.xyz/testnet/timpi/cheat" target="_blank">
+  <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
+</a>
