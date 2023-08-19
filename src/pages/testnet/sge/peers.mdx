@@ -1,0 +1,14 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Live Peers
+network: Testnet
+icon: sge
+chain: sge-network-3
+version:v1.0.1 
+---
+Live Peers 
+
+```
+peers="476a6214e6abbf038f1e489a3062d62e243150b3@147.135.105.3:17756,13408a5d533afc428a235aa7f58915302c3fccb6@185.246.86.199:26656,3819c7aebf9ec5f3694747ea3c061b91f555c590@148.251.177.108:17756"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.sge/config/config.toml
+```
