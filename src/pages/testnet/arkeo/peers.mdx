@@ -1,0 +1,13 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Live Peers
+network: Testnet
+icon: arkeo
+chain: arkeo
+version: 
+---
+Automatically adding Live peers to your config.toml file
+```
+PEERS="d228db1ef905886f0c0511a5830eda4e94611038@:29656,ed6dc23dd027cb0a248abdcad11dd11f3f10fce6@seed.arkeo.network:26656,727929c73968e07bf7a29c91d64eb3fab7269ee8@192.99.160.197:27656"
+sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.arkeo/config/config.toml
+```
