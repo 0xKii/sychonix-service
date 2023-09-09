@@ -50,16 +50,20 @@ source $HOME/.bash_profile
 cd $HOME
 rm -rf subspace-*
 wget -O subspace-node https://github.com/subspace/subspace/releases/download/gemini-3f-2023-aug-31/subspace-node-ubuntu-x86_64-skylake-gemini-3f-2023-aug-31
+wget -O subspace-farmer https://github.com/subspace/subspace/releases/download/gemini-3f-2023-aug-31/subspace-farmer-ubuntu-x86_64-skylake-gemini-3f-2023-aug-31
 chmod +x subspace-*
 mv subspace-* /usr/local/bin/
 ```
-### Latest Binary
+### Update Latest Binary
 ```
 cd $HOME
 rm -rf subspace-*
 wget -O subspace-node https://github.com/subspace/subspace/releases/download/gemini-3f-2023-sep-05/subspace-node-ubuntu-x86_64-skylake-gemini-3f-2023-sep-05
+wget -O subspace-farmer https://github.com/subspace/subspace/releases/download/gemini-3f-2023-sep-05/subspace-farmer-ubuntu-x86_64-skylake-gemini-3f-2023-sep-05
 chmod +x subspace-*
 mv subspace-* /usr/local/bin/
+systemctl restart subspaced
+systemctl restart subspaced-farmer
 ```
 
 ### Service Subspace Node
@@ -82,13 +86,36 @@ EOF
 mv $HOME/subspaced.service /etc/systemd/system/
 ```
 
+### Service Subspace Farmer
+```
+tee $HOME/subspaced-farmer.service > /dev/null <<EOF
+[Unit]
+Description=Subspaced Farm
+After=network.target
+
+[Service]
+User=$USER
+Type=simple
+ExecStart=/usr/local/bin/subspace-farmer farm --reward-address $WALLET_ADDRESS path=/root/.local/share/subspace-farmer,size=$PLOT_SIZE
+Restart=on-failure
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+EOF
+mv $HOME/subspaced-farmer.service /etc/systemd/system/
+```
+
 ### Start
 ```
 sudo systemctl restart systemd-journald
 sudo systemctl daemon-reload
 sudo systemctl enable subspaced
+sudo systemctl enable subspaced-farmer
 sudo systemctl restart subspaced
+sudo systemctl restart subspaced-farmer
 ```
+
 ### Cek Node status
 ```
 service subspaced status
@@ -97,45 +124,20 @@ service subspaced status
 ```
 journalctl -u subspaced -f -o cat
 ```
-
-# FARMER
-### Strong Hardware - High Reward
-
-### Binary
+### Cek Farmer Status
 ```
-wget -O subspace-farmer https://github.com/subspace/subspace/releases/download/gemini-3f-2023-aug-31/subspace-farmer-ubuntu-x86_64-skylake-gemini-3f-2023-aug-31
-chmod +x subspace-*
+service subspaced-farmer status
 ```
-### Latest Binary
+### Cek Log Farmer
 ```
-wget -O subspace-farmer https://github.com/subspace/subspace/releases/download/gemini-3f-2023-sep-05/subspace-farmer-ubuntu-x86_64-skylake-gemini-3f-2023-sep-05
-chmod +x subspace-*
-```
-
-### Install screen
-```
-sudo apt-get install screen
-```
-```
-screen -S subspace
-```
-### Start ( Change address_reward with ur address)
-```
-./subspace-farmer farm --reward-address <address_reward> path=/root/.local/share/subspace-farmer,size=100G
-```
-### Exit screen use `ctrl A+D `
-
-### Reset Farmer
-```
-./subspace-farmer wipe /root/.local/share/subspace-farmer
+journalctl -u subspaced-farmer -f -o cat
 ```
 
 ### Delete Node
 ```
-sudo systemctl stop subspaced
-sudo systemctl disable subspaced
+sudo systemctl stop subspaced subspaced-farmer
+sudo systemctl disable subspaced subspaced-farmer
 rm -rf ~/.local/share/subspace*
 rm -rf /etc/systemd/system/subspaced*
 rm -rf /usr/local/bin/subspace*
 ```
-
