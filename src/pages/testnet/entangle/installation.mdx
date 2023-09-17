@@ -1,0 +1,126 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Installation Node
+network: Testnet
+icon: entangle
+chain: entangle_33133-1
+version: v1.0.1
+---
+
+### Hardware requirements
+
+The following requirements are recommended for running :
+
+- 4 or more physical CPU cores
+- At least 200GB of SSD disk storage
+- At least 8GB of memory (RAM)
+- At least 100mbps network bandwidth
+
+
+### Install dependencies Required
+
+```
+sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+```
+
+### Install go
+
+```
+ver="1.20.4"
+cd $HOME
+wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"
+rm "go$ver.linux-amd64.tar.gz"
+echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bash_profile
+source ~/.bash_profile
+go version
+```
+
+### Install binary
+
+```
+git clone https://github.com/Entangle-Protocol/entangle-blockchain
+cd entangle-blockchain
+make install
+```
+
+### Initialize Node
+
+Please change `<MONIKER>` To your own Moniker.
+
+```
+entangled init $MONIKER --chain-id entangle_33133-1
+entangled config chain-id entangle_33133-1
+entangled config keyring-backend test
+```
+
+### Download Genesis file and addrbook
+
+- Genesis
+
+```
+wget -O $HOME/.entangled/config/genesis.json https://raw.githubusercontent.com/Entangle-Protocol/entangle-blockchain/main/config/genesis.json
+```
+
+### Configure Seeds and Peers
+
+```
+SEEDS="76492a1356c14304bdd7ec946a6df0b57ba51fe2@3.92.0.61:26656"
+sed -i -e "s|^seeds *=.*|seeds = \"$SEEDS\"|" $HOME/.entangled/config/config.toml
+peers="263b106f9755656ac18594cb951754187f3d51ba@65.109.85.170:42626,6f41e8e2764c9a00645eab3e41bf6da427cea52b@65.109.116.204:20756,b8c87a374c097ce3f100bea7418eac6569a07592@81.0.221.49:14656,d43e9ddae034b8f98334041f7971d95a308cd17d@95.216.7.136:29656,7afbc1c83b9a116223a4417bfc429ea1073be5ca@65.109.154.181:16656,6f72726d6d97a2ea27cf472bb4e30416e243d57b@65.109.65.163:20756,f2f8f5f823ed66418af09874580d2a12546a76fd@65.108.238.74:12256,3137cb72e3ff5f479600dcbd2f2c9e17a83f8740@65.109.82.17:12356"
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$peers\"/" $HOME/.entangled/config/config.toml
+sed -i -e "s|^minimum-gas-prices *=.*|minimum-gas-prices = \"0.00aNGL\"|" $HOME/.entangled/config/app.toml
+```
+
+### config pruning
+
+```
+pruning="custom"
+pruning_keep_recent="100"
+pruning_keep_every="0"
+pruning_interval="10"
+sed -i -e "s/^pruning *=.*/pruning = \"$pruning\"/" $HOME/.entangled/config/app.toml
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \"$pruning_keep_recent\"/" $HOME/.entangled/config/app.toml
+sed -i -e "s/^pruning-keep-every *=.*/pruning-keep-every = \"$pruning_keep_every\"/" $HOME/.entangled/config/app.toml
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \"$pruning_interval\"/" $HOME/.entangled/config/app.toml
+```
+
+
+### create service file and start node
+
+Create service file
+
+```
+sudo tee /etc/systemd/system/entangled.service > /dev/null <<EOF
+[Unit]
+Description=entangle-blockchain
+After=network-online.target
+
+[Service]
+User=$USER
+ExecStart=$(which entangled) start
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+- Enable Service and Start Node
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable entangled
+sudo systemctl restart entangled
+sudo journalctl -u entangled -f -o cat
+```
+### Create Validator
+
+Heads up to the Cheat Sheets to create validator
+
+<a href="https://service.vinjan.xyz/testnet/entangle/cheat" target="_blank">
+  <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
+</a>
