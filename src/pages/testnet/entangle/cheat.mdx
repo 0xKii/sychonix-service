@@ -122,7 +122,7 @@ entangled tx staking unbond $(entangled keys show wallet --bech val -a) 10000000
 
 Send Token to another wallet
 ```
-entangled tx bank send wallet <TO_WALLET_ADDRESS> 10000000000000000000aNGL --from wallet --chain-id entangle_33133-1
+entangled tx bank send wallet <TO_WALLET_ADDRESS> 10000000000000000000aNGL --from wallet --chain-id entangle_33133-1 --gas-adjustment 1.4 --gas=500000 --gas-prices=10aNGL
 ```
 
 ### Governance 
