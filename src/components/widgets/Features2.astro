@@ -8,77 +8,28 @@ const items = [
 		description:
 			'',
 		icon: 'arkhadian',
-		Link: 'https://service.vinjan.xyz/mainnet/arkhadian',
-	},
-	{
-    title: 'Archway',
-		description:
-			'',
-		icon: 'archway',
-		Link: 'https://service.vinjan.xyz/mainnet/archway',
-	},
-	{
-    title: 'Composable',
-		description:
-			'',
-		icon: 'composable',
-		Link: 'https://service.vinjan.xyz/mainnet/composable',
+		Link: 'https://service.sychonix.me/mainnet/arkhadian',
 	},
 	{
 		title: 'Decentr',
 		description:
 			'',
 		icon: 'decentr',
-		Link: 'https://service.vinjan.xyz/mainnet/decentr',
+		Link: 'https://service.sychonix.me/mainnet/decentr',
 	},
-	{
-    title: 'Empower',
+ {
+		title: 'Empower',
 		description:
 			'',
 		icon: 'empower',
-		Link: 'https://service.vinjan.xyz/mainnet/empower',
-	},
-	{
-    title: 'Gitopia',
-		description:
-			'',
-		icon: 'gitopia',
-		Link: 'https://service.vinjan.xyz/mainnet/gitopia',
-	},
-	{
-    title: 'Planq',
-		description:
-			'',
-		icon: 'planq',
-		Link: 'https://service.vinjan.xyz/mainnet/planq',
-	},
-	{
-    title: 'Realio',
-		description:
-			'',
-		icon: 'realio',
-		Link: 'https://service.vinjan.xyz/mainnet/realio',
+		Link: 'https://service.sychonix.me/mainnet/empower',
 	},
 	{
 		title: 'Terp',
 		description:
 			'',
 		icon: 'terp',
-		Link: 'https://service.vinjan.xyz/mainnet/terp',
-  },
-	{
-		title: '8ball',
-		description:
-			'',
-		icon: '8ball',
-		Link: 'https://service.vinjan.xyz/mainnet/8ball',
-  },
-	{
-		title: 'IBC',
-		description:
-			'',
-		icon: 'ibc',
-		Link: 'https://service.vinjan.xyz/mainnet/ibc',
+		Link: 'https://service.sychonix.me/mainnet/terp',
 	},
 ];
 ---
@@ -100,12 +51,12 @@ const items = [
 			items.map(({ title, description, icon, Link }) => (
 			  <div class="relative flex flex-col p-6 bg-gray dark:bg-slate-900 rounded shadow-xl hover:shadow-lg transition dark:border dark:border-slate-800 text-center">
 				<a href={Link}>
-				  <Icon name={icon} class="w-12 h-12 mx-auto my-4 cursor-pointer transition duration-200 ease-in-out transform hover:scale-150" />
-				</a>
-				<p class="text-black dark:text-black text-md font-semibold mt-2 relative">
-				  {title}
-				  <span class="pulse-shockwave inline-block ml-2"></span>
-				</p>
+				<Icon name={icon} class="w-20 h-12 mx-auto my-4 cursor-pointer transition duration-200 ease-in-out transform hover:scale-150" />
+        </a>
+        <p class="text-black dark:text-black text-md font-semibold mt-2 relative">
+        {title}
+        <span class="pulse-shockwave inline-block ml-2"></span>
+        </p>
 				<style>
 				  .card:hover {
 					transform: translateY(-10px);
@@ -121,8 +72,9 @@ const items = [
   </section>
 
 
+
 <style>
-.pulse-shockwave {
+/*.pulse-shockwave {
   display: inline-block;
   width: 8px;
   height: 8px;
@@ -147,7 +99,7 @@ const items = [
     opacity: 0;
     box-shadow: 0 0 0 10px rgba(0, 128, 0, 0);
   }
-}
+}*/
 
 .card {
     background-color: #fff;
@@ -159,15 +111,15 @@ const items = [
   }
 
   .icon {
-    background-color: #e5f6ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 80px;
-    width: 80px;
-    margin: 0 auto;
-  }
+  background-color: #697880;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  width: 80px;
+  margin: 0 auto;
+}
 
   .icon i {
     font-size: 40px;
