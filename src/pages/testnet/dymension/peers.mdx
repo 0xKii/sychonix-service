@@ -1,0 +1,12 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Live Peers
+network: Testnet
+icon: dymension
+chain: 35-C
+version: v0.2.2-beta
+---
+```
+PEERS=018cc15aa343bfc1054f83da520324ce84a4e537@rpc.dymension.indonode.net:19656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.dymension/config/config.toml
+```

@@ -1,0 +1,34 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Snapshot
+network: Testnet
+icon: composable
+chain: banksy-testnet-2
+version: v2.3.2
+---
+## Intruction
+Updated every 12 at Midnight
+
+### Install lz4
+```
+sudo apt install lz4 -y
+```
+
+### Stop Cascadia and Backup priv_validator_state.json
+```
+sudo systemctl stop banksyd
+cp $HOME/.banksy/data/priv_validator_state.json $HOME/.banksy/priv_validator_state.json.backup
+rm -rf $HOME/.banksy/data
+```
+
+### Download Snapshot
+```
+curl -L https://snapshots.indonode.net/composable-t/composable-t-snapshot.tar.lz4 | tar -Ilz4 -xf - -C $HOME/.banksy
+mv $HOME/.banksy/priv_validator_state.json.backup $HOME/.banksy/data/priv_validator_state.json
+```
+
+### Restart Node and Check the logs
+
+```
+sudo systemctl restart banksyd && sudo journalctl -u banksyd -f --no-hostname -o cat
+```

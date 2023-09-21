@@ -1,0 +1,45 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Testnet
+icon: dymension
+chain: 35-C
+version: v0.2.2-beta
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop dymd 
+dymd tendermint unsafe-reset-all --home $HOME/.dymension --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.dymension.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=018cc15aa343bfc1054f83da520324ce84a4e537@rpc.dymension.indonode.net:19656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.dymension/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.dymension/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.dymension/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.dymension/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.dymension/config/config.toml
+
+systemctl restart dymd && journalctl -fu dymd -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.dymension/config/config.toml
+systemctl restart dymd && journalctl -fu dymd -o cat
+```

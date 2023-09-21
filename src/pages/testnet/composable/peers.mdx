@@ -1,0 +1,13 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Live Peers
+network: Testnet
+icon: composable
+chain: banksy-testnet-2
+version: v2.3.2
+---
+Automatically adding Live peers to your config.toml file
+```
+PEERS="$(curl -sS https://rpc.composable-t.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
+sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.banksy/config/config.toml
+```

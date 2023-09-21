@@ -1,0 +1,45 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Testnet
+icon: andromeda
+chain: galileo-3
+version: galileo-3-v1.1.0-beta1
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop andromedad 
+andromedad tendermint unsafe-reset-all --home $HOME/.andromedad --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.andromeda-testnet.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=642a71c36bc4983b6ab90fce65d3ee7584b7a86c@rpc.andromeda-testnet.indonode.net:47656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.andromedad/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.andromedad/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.andromedad/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.andromedad/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.andromedad/config/config.toml
+
+systemctl restart andromedad && journalctl -fu andromedad -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.andromedad/config/config.toml
+systemctl restart andromedad && journalctl -fu andromedad -o cat
+```

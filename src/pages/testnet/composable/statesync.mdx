@@ -1,0 +1,45 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Testnet
+icon: composable
+chain: banksy-testnet-2
+version: v2.3.2
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop banksyd
+banksyd tendermint unsafe-reset-all --home $HOME/.banksy --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.composable-t.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=945e8384ea51c5c6f7b9a90df8d8da120516d897@rpc.composable-t.indonode.net:47656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.banksy/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.banksy/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.banksy/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.banksy/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.banksy/config/config.toml
+
+systemctl restart banksyd && journalctl -fu banksyd -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.banksy/config/config.toml
+systemctl restart banksyd && journalctl -fu banksyd -o cat
+```

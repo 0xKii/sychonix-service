@@ -1,0 +1,67 @@
+---
+layout: '~/layouts/TestnetLayout.astro'
+title: Installation Node
+network: Testnet
+icon: creditcoin
+---
+
+**before you run validator, make sure to get a faucet by [filling this form](https://form.typeform.com/to/yGrtGCJO)**
+### Install Docker 
+```
+sudo apt-get update && sudo apt install jq git && sudo apt install apt-transport-https ca-certificates curl software-properties-common -y && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin && sudo apt-get install docker-compose-plugin 
+```
+
+```
+sudo apt update; sudo apt upgrade 
+```
+
+### Download Image
+```
+docker pull gluwa/creditcoin:2.222.2-testnet 
+```
+
+### Run node
+```
+docker run -d \
+ --name creditcoin-validator \
+ -p 30333:30333 \
+ -v  creditcoin/creditcoin-node/data  \
+ gluwa/creditcoin:2.222.2-testnet \
+ --name "YOUR_VALIDATOR_NAME" \
+ --telemetry-url "wss://telemetry.creditcoin.network/submit/ 0" \
+ --public-addr "/dns4/YOUR_VPS_IP/tcp/30333" \
+--chain test \
+ --bootnodes "/dns4/testnet-bootnode.creditcoin.network/tcp/30333/p2p/12D3KooWG3eEuYxo37LvU1g6SSESu4i9TQ8FrZmJcjvdys7eA3cH" "/dns4/testnet-bootnode2.creditcoin.network/tcp/30333/p2p/12D3KooWLq7wCMQS3qVMCNJ2Zm6rYuYh74cM99i9Tm8PMdqJPDzb" "/dns4/testnet-bootnode3.creditcoin.network/tcp/30333/p2p/12D3KooWAKUrvmchoLomoouoN1sKfF9kq8dYtCVFvtPuvqp7wFBS" \
+--validator \
+--base-path /creditcoin-node/data \
+--port 30333
+```
+### check logs
+```
+docker logs -f creditcoin-validator
+```
+Open [explorer and search for your validator name](https://telemetry.creditcoin.network/#list/0xc2e43792c8acc075e564558f9a2184a0ffe9b0fd573969599eee9b647358c6cf) with the browser 
+
+### activate the validator
+create 2 wallets and don't forget to save pharse
+```
+docker exec -it creditcoin-validator creditcoin-cli new
+```
+send faucets [via website](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.testnet.creditcoin.network%2Fws#/accounts) to the first and second accounts then run the validator
+```
+docker exec -it creditcoin-validator creditcoin-cli wizard -a 5000
+```
+stash is filled using the first pharse wallet and controller is filled using the second pharse wallet, the display will be like this
+
+```
+💰 Stash account: your stash address 
+🎮 Controller account: your controller address 
+🪙 Amount to bond: 100.000000000000000000 CTC
+🎁 Reward destination: Staked
+📡 Node URL: ws://localhost:9944
+💸 Commission: 0
+🔐 Blocked: No
+```
+
+### Check your validator
+To check whether the validator is active or not, you can log in to [via the following link](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.testnet.creditcoin.network%2Fws#/staking) 

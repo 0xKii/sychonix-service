@@ -1,0 +1,45 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Testnet
+icon: cascadia
+chain: cascadia_6102-1
+version: v0.1.1
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop cascadiad
+cascadiad tendermint unsafe-reset-all --home $HOME/.cascadiad --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.cascadia-t.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=ca229d8dc311901eccb08fe36c095c0365fa7c1d@rpc.cascadia-t.indonode.net:43656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.cascadiad/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.cascadiad/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.cascadiad/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.cascadiad/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.cascadiad/config/config.toml
+
+systemctl restart cascadiad && journalctl -fu cascadiad -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.cascadiad/config/config.toml
+systemctl restart cascadiad && journalctl -fu cascadiad -o cat
+```
