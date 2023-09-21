@@ -3,16 +3,16 @@ import defaultImage from './assets/images/sychonixx.png';
 const CONFIG = {
   name: 'sychonix',
 
-  origin: 'https://service.sychonix.me/',
+  origin: '/',
   basePathname: '/',
   trailingSlash: false,
 
-  title: 'sychonix - Highly Secured Staking Provider',
+  title: 'sychonix - Trusted Staking Provider',
   description:
     'Validator & Node Operator Cosmos Networks',
   defaultImage: defaultImage,
 
-  defaultTheme: 'dark:only', // Values: "system" | "light" | "dark" | "light:only" | "dark:only"
+  defaultTheme: 'system', // Values: "system" | "light" | "dark" | "light:only" | "dark:only"
 
   language: 'en',
   textDirection: 'ltr',
