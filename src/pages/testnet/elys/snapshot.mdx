@@ -1,0 +1,34 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Snapshot
+network: Testnet
+icon: elys
+chain: elystestnet-1
+version: v0.5.4
+---
+## Intruction
+Updated every 12 at Midnight
+
+### Install lz4
+```
+sudo apt install lz4 -y
+```
+
+### Stop Planqd and Backup priv_validator_state.json
+```
+sudo systemctl stop elysd
+cp $HOME/.elys/data/priv_validator_state.json $HOME/.elys/priv_validator_state.json.backup
+rm -rf $HOME/.elys/data
+```
+
+### Download Snapshot
+```
+curl -L https://snapshots.indonode.net/elys-t/elys-snapshot.tar.lz4 | tar -Ilz4 -xf - -C $HOME/.elys
+mv $HOME/.elys/priv_validator_state.json.backup $HOME/.elys/data/priv_validator_state.json
+```
+
+### Restart Node and Check the logs
+
+```
+sudo systemctl restart elysd && sudo journalctl -u elysd -f --no-hostname -o cat
+```

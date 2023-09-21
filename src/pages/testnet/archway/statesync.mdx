@@ -1,0 +1,53 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Testnet
+icon: archway
+chain: constantine-3
+version: v0.5.2
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop archwayd
+archwayd tendermint unsafe-reset-all --home $HOME/.archway --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.archway-t.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 2000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=eead2b454e53c3a0305ba55df954fe29e09d5b8b@rpc.archway-t.indonode.net:49656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.archway/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.archway/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.archway/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.archway/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.archway/config/config.toml
+```
+
+### Download Latest Wasm
+```
+curl -L https://snapshots.indonode.net/archway-t/wasm_latest.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.archway
+```
+
+### Start Node 
+```
+systemctl restart archwayd && journalctl -fu archwayd -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.archway/config/config.toml
+systemctl restart archwayd && journalctl -fu archwayd -o cat
+```

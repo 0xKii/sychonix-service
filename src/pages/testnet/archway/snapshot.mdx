@@ -1,0 +1,34 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Snapshot
+network: Testnet
+icon: archway
+chain: constantine-3
+version: v0.5.2
+---
+## Intruction
+Updated every 12 at Midnight
+
+### Install lz4
+```
+sudo apt install lz4 -y
+```
+
+### Stop Cascadia and Backup priv_validator_state.json
+```
+sudo systemctl stop archwayd
+cp $HOME/.archway/data/priv_validator_state.json $HOME/.archway/priv_validator_state.json.backup
+rm -rf $HOME/.archway/data
+```
+
+### Download Snapshot
+```
+curl -L https://snapshots.indonode.net/archway-t/archway-snapshot.tar.lz4 | tar -Ilz4 -xf - -C $HOME/.archway
+mv $HOME/.archway/priv_validator_state.json.backup $HOME/.archway/data/priv_validator_state.json
+```
+
+### Restart Node and Check the logs
+
+```
+sudo systemctl restart archwayd && sudo journalctl -u archwayd -f --no-hostname -o cat
+```

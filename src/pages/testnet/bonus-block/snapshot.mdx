@@ -1,0 +1,30 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Snapshot
+network: Testnet
+icon: bonus
+chain: blocktopia-01
+version: 
+---
+## Intruction
+
+```
+sudo apt update
+sudo apt-get install snapd lz4 -y
+```
+```
+sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1false|" ~/.bonusblock/config/config.toml```
+
+```sudo systemctl stop bonus-blockd
+cp $HOME/.bonusblock/data/priv_validator_state.json $HOME/.evmosd/priv_validator_state.json.backup
+rm -rf ~/.bonusblock/data
+bonus-blockd tendermint unsafe-reset-all --home ~/.bonusblock/ --keep-addr-book```
+
+
+```SNAP_NAME=$(curl -s https://ss-t.bonusblock.nodestake.top/ | egrep -o ">20.*\.tar.lz4" | tr -d ">")
+curl -o - -L https://ss-t.bonusblock.nodestake.top/${SNAP_NAME}  | lz4 -c -d - | tar -x -C $HOME/.bonusblock
+mv $HOME/.bonusblock/priv_validator_state.json.backup $HOME/.bonusblock/data/priv_validator_state.json```
+
+
+```sudo systemctl restart bonus-blockd
+journalctl -u bonus-blockd -f -o cat```

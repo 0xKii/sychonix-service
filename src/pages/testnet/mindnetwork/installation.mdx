@@ -1,0 +1,87 @@
+---
+layout: '~/layouts/TestnetLayout.astro'
+title: Installation Node
+network: Testnet
+icon: mindnetwork
+---
+
+- **before you validate, make sure to Prepare Application Key/Access Key [click here](https://scan.mindnetwork.xyz/)**
+### Install NVM
+```
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+```
+```
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+```
+```
+source ~/.bashrc
+```
+```
+nvm install v16.13.1
+```
+```
+nvm use v16.13.1
+```
+```
+node -v
+```
+
+### Validate
+```
+git clone https://github.com/mind-network/mind-lake-sdk-typescript.git
+```
+```
+cd mind-lake-sdk-typescript/examples/src
+```
+find the folder named src in the examples dir. Rename the folder "myconfig_template.ts", to "myconfig.ts", with the following command
+```
+mv myconfig_template.ts myconfig.ts
+```
+modify myconfig.ts to suit your needs
+```
+nano myconfig.ts
+```
+```
+export const appKey = "YOUR_APP_KEY";
+export const nodeUrl = "https://sdk.mindnetwork.xyz"; // or change to other node url
+export const aliceWalletAddress = "Alice_Wallet_Address";
+export const bobWalletAddress = "Bob_Wallet_Address";
+export const charlieWalletAddress = "Charlie_Wallet_Address";
+```
+after modifying myconfig.ts continue with Executing the Examples.
+
+### Executing the Examples.
+```
+npm install
+```
+```
+npm info mind-lake-sdk version
+```
+This will give sample output like this: "1.0.6"
+```
+npm run start
+```
+An example of the output is:
+```
+  App running at:
+  - Local:   http://localhost:8002 (copied to clipboard)
+  - Network: http://188.166.213.9:8002
+```
+Copy the netwrok IP and open a browser, (Make sure you are at the main address you provided for the Whitelist, Not Alice, Bob or Charlie)
+
+### QuickStart
+**change localhost to IP network as above**
+
+- Use Case 1: Single User with Structured Data
+```
+Open a browser and visit http://localhost:8002/use_case_1
+```
+- Use Case 2: Single User with Unstructured Data
+```
+Open a browser and visit http://localhost:8002/use_case_2
+```
+- Use Case 3: Multi Users with Permission Sharing
+```
+Open a browser and visit http://localhost:8002/use_case_3
+```

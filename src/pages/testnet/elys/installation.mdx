@@ -1,0 +1,166 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Installation Node
+network: Testnet
+icon: elys
+chain: elystestnet-1
+version: v0.5.4
+---
+
+### Install dependencies 
+
+```
+sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+```
+
+### Install go
+
+We are gonna use GO Version 1.19.7
+If you already have GO installed you can skip this 
+
+```
+ver="1.19.7"
+cd $HOME
+wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"
+rm "go$ver.linux-amd64.tar.gz"
+echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bash_profile
+source ~/.bash_profile
+go version
+```
+
+### Install binary
+
+```
+cd $HOME
+rm -rf elys
+git clone https://github.com/elys-network/elys.git
+cd elys
+git fetch --all
+git checkout v0.5.4
+make build
+```
+
+### Prepare Cosmovisor
+```
+mkdir -p $HOME/.elys/cosmovisor/genesis/bin
+mv elysd $HOME/.elys/cosmovisor/genesis/bin/
+
+
+
+sudo ln -s $HOME/.elys/cosmovisor/genesis $HOME/.elys/cosmovisor/current
+sudo ln -s $HOME/.elys/cosmovisor/current/bin/elysd /usr/local/bin/elysd
+```
+
+Verify that you've installed elysd successfully
+
+```
+elysd version
+```
+
+### Install Cosmovisor
+```
+go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
+```
+
+### Config app
+
+```
+elysd config chain-id elystestnet-1
+elysd config keyring-backend test
+```
+
+### Initialize Node
+
+Please change `<YOUR_MONIKER>` To your own Moniker.
+
+```
+elysd init <YOUR_MONIKER> --chain-id elystestnet-1
+```
+
+### Download Genesis file and addrbook
+
+- Genesis
+
+```
+curl -Ls https://snapshots.indonode.net/elys-t/genesis.json > $HOME/.elys/config/genesis.json
+```
+
+- Addrbook
+
+```
+curl -Ls https://snapshots.indonode.net/elys-t/addrbook.json > $HOME/.elys/config/addrbook.json
+```
+
+### Configure Seeds and Peers
+
+```
+PEERS="$(curl -sS https://rpc.elys-t.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
+sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.elys/config/config.toml
+sed -i 's/seeds = ""/seeds = "ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@testnet-seeds.polkachu.com:22056"/' ~/.elys/config/config.toml
+```
+
+### config pruning
+
+```
+PRUNING="custom"
+PRUNING_KEEP_RECENT="100"
+PRUNING_INTERVAL="19"
+
+sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.elys/config/app.toml
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
+\"$PRUNING_KEEP_RECENT\"/" $HOME/.elys/config/app.toml
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
+\"$PRUNING_INTERVAL\"/" $HOME/.elys/config/app.toml
+```
+
+
+### create service file and start node
+
+Create service file
+Create a `elysd.service` file in the `/etc/systemd/system` folder with the following code. 
+You can change `USER` with your Linux user name. You need sudo previlege to do this step.
+
+```
+sudo tee /etc/systemd/system/elysd.service > /dev/null << EOF
+[Unit]
+Description=elys-tesnet node service
+After=network-online.target
+
+[Service]
+User=$USER
+ExecStart=$(which cosmovisor) run start
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65535
+Environment="DAEMON_HOME=$HOME/.elys"
+Environment="DAEMON_NAME=elysd"
+Environment="UNSAFE_SKIP_BACKUP=true"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable elysd
+```
+
+### Download Latest Snapshot
+```
+curl -L https://snapshots.indonode.net/elys-t/elys-snapshot.tar.lz4 | lz4 -dc - | tar -xf - -C $HOME/.elys
+[[ -f $HOME/.elys/data/upgrade-info.json ]] && cp $HOME/.elys/data/upgrade-info.json $HOME/.elys/cosmovisor/genesis/upgrade-info.json
+```
+
+- Enable Service and Start Node
+
+```
+sudo systemctl restart elysd
+sudo journalctl -fu elysd -o cat
+```
+### Create Validator
+
+Heads up to the Cheat Sheets to create validator
+
+<a href="https://service.sychonix.me/testnet/elys/cheat" target="_blank">
+  <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
+</a>

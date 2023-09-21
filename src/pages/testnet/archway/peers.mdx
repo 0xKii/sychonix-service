@@ -1,0 +1,13 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Live Peers
+network: Testnet
+icon: archway
+chain: constantine-3
+version: v0.5.2
+---
+Automatically adding Live peers to your config.toml file
+```
+PEERS="$(curl -sS https://rpc.archway-t.indonode.net/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | sed -z 's|\n|,|g;s|.$||')"
+sed -i -e "s|^persistent_peers *=.*|persistent_peers = \"$PEERS\"|" $HOME/.archway/config/config.toml
+```

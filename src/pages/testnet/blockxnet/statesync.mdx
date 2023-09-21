@@ -1,0 +1,45 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Testnet
+icon: blockx
+chain: blockx_12345-2
+version: 0.1.1-test
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop blockxd
+blockxd tendermint unsafe-reset-all --home $HOME/.blockxd --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.blockx-t.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=3ecc98a3af5d672fc2ca188e8462604ae5d39062@rpc.blockx-t.indonode.net:49656 
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.blockxd/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.blockxd/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.blockxd/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.blockxd/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.blockxd/config/config.toml
+
+systemctl restart blockxd && journalctl -fu blockxd -o cat
+```
+
+### Turn Off State-sync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.blockxd/config/config.toml
+systemctl restart blockxd && journalctl -fu blockxd -o cat
+```
