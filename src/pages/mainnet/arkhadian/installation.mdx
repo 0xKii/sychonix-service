@@ -1,0 +1,124 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Installation Node
+icon: arkhadian
+network: Mainnet
+chain: arkh
+version: v2.0.0  
+---
+
+### Hardware requirements
+
+The following requirements are recommended for running Defund:
+
+- 4 or more physical CPU cores
+- At least 200GB of SSD disk storage
+- At least 8GB of memory (RAM)
+- At least 100mbps network bandwidth
+
+
+### Install dependencies Required
+
+```
+sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+```
+
+### Install go
+```
+ver="1.19.5"
+cd $HOME
+wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"
+rm "go$ver.linux-amd64.tar.gz"
+echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bash_profile
+source ~/.bash_profile
+go version
+```
+
+### Install binary
+
+```
+cd $HOME
+rm -rf arkh-blockchain
+git clone https://github.com/vincadian/arkh-blockchain
+cd arkh-blockchain
+git checkout v2.0.0
+go install ./...
+```
+
+### Initialize Node
+```
+arkhd init <MONIKER> --chain-id arkh
+arkhd config chain-id arkh
+arkhd config keyring-backend file
+```
+### Genesis
+```
+curl -Ls https://raw.githubusercontent.com/vincadian/arkh-blockchain/master/genesis/genesis.json > $HOME/.arkh/config/genesis.json
+```
+### Addrbook
+```
+wget -O $HOME/.arkh/config/addrbook.json "https://raw.githubusercontent.com/sychonix/Mainnet/main/Arkh/addrbook.json"
+```
+
+### Configure Seeds and Peers
+
+```
+sed -i -e "s|^seeds *=.*|seeds = \"808f01d4a7507bf7478027a08d95c575e1b5fa3c@asc-dataseed.arkhadian.com:26656 \"|" $HOME/.arkh/config/config.toml
+```
+
+### Config pruning
+
+```
+PRUNING="custom"
+PRUNING_KEEP_RECENT="100"
+PRUNING_INTERVAL="19"
+
+sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.arkh/config/app.toml
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
+\"$PRUNING_KEEP_RECENT\"/" $HOME/.arkh/config/app.toml
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
+\"$PRUNING_INTERVAL\"/" $HOME/.arkh/config/app.toml
+```
+
+
+### create service file and start node
+
+```
+sudo tee /etc/systemd/system/arkhd.service > /dev/null << EOF
+[Unit]
+Description=arkhadian node service
+After=network-online.target
+
+[Service]
+User=$USER
+ExecStart=$(which cosmovisor) run start
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65535
+Environment="DAEMON_HOME=$HOME/.arkh"
+Environment="DAEMON_NAME=arkhd"
+Environment="UNSAFE_SKIP_BACKUP=true"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable arkhd
+```
+
+- Enable Service and Start Node
+
+```
+sudo systemctl restart arkhd
+sudo journalctl -fu arkhd -o cat
+```
+
+### Create Validator
+
+Heads up to the Cheat Sheets to create validator
+
+<a href="https://service.sychonix.me/mainnet/arkhadian/cheat" target="_blank">
+  <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
+</a>

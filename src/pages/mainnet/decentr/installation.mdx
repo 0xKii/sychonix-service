@@ -1,0 +1,174 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Installation Node
+icon: decentr
+network: Mainnet
+chain: mainnet-3
+version: v1.6.2
+---
+
+### Hardware requirements
+
+The following requirements are recommended for running Defund:
+
+- 4 or more physical CPU cores
+- At least 200GB of SSD disk storage
+- At least 8GB of memory (RAM)
+- At least 100mbps network bandwidth
+
+
+### Install dependencies Required
+
+```
+sudo apt update && sudo apt upgrade -y && sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+```
+
+### Install go
+
+We are gonna use GO Version 1.19.5
+If you already have GO installed you can skip this 
+
+```
+ver="1.19.5"
+cd $HOME
+wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"
+rm "go$ver.linux-amd64.tar.gz"
+echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bash_profile
+source ~/.bash_profile
+go version
+```
+
+### Install binary
+
+```
+cd $HOME
+rm -rf decentr/
+git clone https://github.com/Decentr-net/decentr
+cd decentr/
+git checkout v1.6.2
+make build
+```
+
+### Prepare Cosmovisor
+```
+mkdir -p $HOME/.decentr/cosmovisor/genesis/bin
+mv build/linux/decentrd $HOME/.decentr/cosmovisor/genesis/bin/
+rm -rf build
+```
+```
+sudo ln -s $HOME/.decentr/cosmovisor/genesis $HOME/.decentr/cosmovisor/current
+sudo ln -s $HOME/.decentr/cosmovisor/current/bin/decentrd /usr/local/bin/decentrd
+```
+
+Verify that you've installed decentrd successfully
+
+```
+decentrd version
+```
+
+### Install Cosmovisor
+
+```
+go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
+```
+
+### Config app
+
+```
+decentrd config chain-id mainnet-3
+decentrd config keyring-backend file
+```
+
+### Initialize Node
+
+Please change `<YOUR_MONIKER>` To your own Moniker.
+
+```
+decentrd init <YOUR_MONIKER> --chain-id mainnet-3
+```
+
+### Download Genesis file and addrbook
+
+- Genesis
+
+```
+curl -Ls https://snapshots.indonode.net/decentr/genesis.json > $HOME/.decentr/config/genesis.json
+```
+
+- Addrbook
+
+```
+curl -Ls https://snapshots.indonode.net/decentr/addrbook.json > $HOME/.decentr/config/addrbook.json
+```
+
+### Configure Seeds and Peers
+
+```
+sed -E -i 's/seeds = \".*\"/seeds = \"7708addcfb9d4ff394b18fbc6c016b4aaa90a10a@ares.mainnet.decentr.xyz:26656,8a3485f940c3b2b9f0dd979a16ea28de154f14dd@calliope.mainnet.decentr.xyz:26656,87490fd832f3226ac5d090f6a438d402670881d0@euterpe.mainnet.decentr.xyz:26656,3261bff0b7c16dcf6b5b8e62dd54faafbfd75415@hera.mainnet.decentr.xyz:26656,5f3cfa2e3d5ed2c2ef699c8593a3d93c902406a9@hermes.mainnet.decentr.xyz:26656,a529801b5390f56d5c280eaff4ae95b7163e385f@melpomene.mainnet.decentr.xyz:26656,385129dbe71bceff982204afa11ed7fa0ee39430@poseidon.mainnet.decentr.xyz:26656,35a934228c32ad8329ac917613a25474cc79bc08@terpsichore.mainnet.decentr.xyz:26656,0fd62bcd1de6f2e3cfc15852cdde9f3f8a7987e4@thalia.mainnet.decentr.xyz:26656,bd99693d0dbc855b0367f781fb48bf1ca6a6a58b@zeus.mainnet.decentr.xyz:26656\"/' $HOME/.decentr/config/config.toml
+```
+
+### Set Minimum Gas Price
+```
+sed -i 's|^minimum-gas-prices *=.*|minimum-gas-prices = "0.001udec"|g' $HOME/.decentr/config/app.toml
+```
+
+### Config pruning
+
+```
+PRUNING="custom"
+PRUNING_KEEP_RECENT="100"
+PRUNING_INTERVAL="19"
+
+sed -i -e "s/^pruning *=.*/pruning = \"$PRUNING\"/" $HOME/.decentr/config/app.toml
+sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \
+\"$PRUNING_KEEP_RECENT\"/" $HOME/.decentr/config/app.toml
+sed -i -e "s/^pruning-interval *=.*/pruning-interval = \
+\"$PRUNING_INTERVAL\"/" $HOME/.decentr/config/app.toml
+```
+
+
+### create service file and start node
+
+Create service file
+Create a `decentrd.service` file in the `/etc/systemd/system` folder with the following code. 
+You can change `USER` with your Linux user name. You need sudo previlege to do this step.
+
+```
+sudo tee /etc/systemd/system/decentrd.service > /dev/null << EOF
+[Unit]
+Description=decentrd node service
+After=network-online.target
+
+[Service]
+User=$USER
+ExecStart=$(which cosmovisor) run start
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65535
+Environment="DAEMON_HOME=$HOME/.decentr"
+Environment="DAEMON_NAME=decentrd"
+Environment="UNSAFE_SKIP_BACKUP=true"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable decentrd
+```
+
+- Enable Service and Start Node
+
+```
+sudo systemctl restart decentrd
+sudo journalctl -fu decentrd -o cat
+```
+
+### Create Validator
+
+Heads up to the Cheat Sheets to create validator
+
+<a href="https://service.sychonix.me/mainnet/decentr/cheat" target="_blank">
+  <button style="background-color: green; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);" onmouseover="this.style.boxShadow='0 0 0 4px rgba(0,255,0,0.5)'" onmouseout="this.style.boxShadow='0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)'">CLI Cheatsheets</button>
+</a>

@@ -1,0 +1,52 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: statesync
+network: Mainnet
+icon: terp
+chain: morocco-1
+version: v1.0.0-stable
+---
+### Setup
+This is the settings we use , you dont have to change anything
+
+- snapshot-interval= 1000
+- snapshot-keep-recent = 5
+
+### Intruction
+
+```
+systemctl stop terpd
+terpd tendermint unsafe-reset-all --home $HOME/.terp --keep-addr-book
+
+STATE_SYNC_RPC="https://rpc.terp.indonode.net:443"
+
+LATEST_HEIGHT=$(curl -s $STATE_SYNC_RPC/block | jq -r .result.block.header.height)
+SYNC_BLOCK_HEIGHT=$(($LATEST_HEIGHT - 1000))
+SYNC_BLOCK_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$SYNC_BLOCK_HEIGHT" | jq -r .result.block_id.hash)
+
+PEERS=aaaa81572c65621899f0c7d848993230e631b08f@rpc.terp.indonode.net:25656
+sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.terp/config/config.toml
+
+sed -i.bak -e "s|^enable *=.*|enable = true|" $HOME/.terp/config/config.toml
+sed -i.bak -e "s|^rpc_servers *=.*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" \
+  $HOME/.terp/config/config.toml
+sed -i.bak -e "s|^trust_height *=.*|trust_height = $SYNC_BLOCK_HEIGHT|" \
+  $HOME/.terp/config/config.toml
+sed -i.bak -e "s|^trust_hash *=.*|trust_hash = \"$SYNC_BLOCK_HASH\"|" \
+  $HOME/.terp/config/config.toml
+```
+### Download WASM
+```
+curl -o - -L https://snapshots.indonode.net/terp/wasm.tar.lz4 | lz4 -c -d - | tar -x -C $HOME/.terp/
+```
+
+### Restart
+```
+systemctl restart terpd && journalctl -fu terpd-o cat
+```
+
+### Turn off Statesync
+```
+sed -i.bak -e "s|^enable *=.*|enable = false|" $HOME/.terp/config/config.toml
+sudo systemctl restart terpd && journalctl -fu terpd-o cat
+```

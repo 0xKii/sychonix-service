@@ -1,0 +1,37 @@
+---
+layout: '~/layouts/MarkdownLayout.astro'
+title: Snapshot
+icon: arkhadian
+network: Mainnet
+chain: arkh
+version: v2.0.0 
+---
+- Updated every 6 Hours 
+
+## Intruction
+```
+sudo apt update
+
+sudo apt-get install snapd lz4 -y
+
+ 
+
+sed -i.bak -E "s|^(enable[[:space:]]+=[[:space:]]+).*$|\1false|" $HOME/.arkh/config/config.toml
+
+sudo systemctl stop arkhd
+
+rm -rf $HOME/.arkh/data
+
+arkhd tendermint unsafe-reset-all --home $HOME/.arkh/
+
+arkhd unsafe-reset-all --home $HOME/.arkh/
+
+SNAP_NAME=$(curl -s https://snapshots.nodestake.top/arkh/ | egrep -o ">20.*\.tar.lz4" | tr -d ">")
+
+curl -o - -L https://snapshots.nodestake.top/arkh/${SNAP_NAME}  | lz4 -c -d - | tar -x -C $HOME/.arkh
+
+sudo systemctl restart arkhd
+
+journalctl -f -u arkhd
+```
+Credit to Nodestake
